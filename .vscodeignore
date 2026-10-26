@@ -18,3 +18,4 @@ test-e2e/**
 .claude/**
 dist/test/**
 *.log
+testing.txt

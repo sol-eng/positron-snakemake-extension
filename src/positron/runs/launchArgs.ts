@@ -266,9 +266,12 @@ export function buildRunScript(script: RunScript): string {
     "pid=$!",
     `echo "$pid" >${q(files.pid)}`,
     `if [ "$stop" = INT ]; then kill -INT -- -"$pid" 2>/dev/null; elif [ "$stop" = TERM ]; then kill -TERM "$pid" 2>/dev/null; fi`,
-    // wait returns early when a trapped signal arrives
+    // wait returns 128+n when a trapped signal arrives, maybe before Snakemake
+    // has ended; then wait again for Snakemake's own status, which bash keeps
+    // until it is collected (127 once it has been)
     `wait "$pid"; code=$?`,
     `while kill -0 "$pid" 2>/dev/null; do wait "$pid"; code=$?; done`,
+    `wait "$pid" 2>/dev/null; last=$?; [ "$last" -ne 127 ] && code=$last`,
     `echo "$code" >${q(files.exitcode)}`,
     `exit "$code"`
   );

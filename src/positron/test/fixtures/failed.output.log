@@ -1,0 +1,75 @@
+Assuming unrestricted shared filesystem usage.
+
+SNAKEMAKE
+=========
+  Date: 2026-10-26 20:18:49
+  Workflow ID: be20cddd-f64d-4f31-8879-82c78d091644
+  Platform: macOS-27.0.1-arm64-arm-64bit-Mach-O
+  Host: host
+  User: user
+  Snakemake version: 9.26.1
+  Python version: 3.13.16 (main, Sep 30 2026, 18:57:20) [Clang 21.0.0 (clang-2100.3.34.2)]
+  Command: /opt/venv/bin/snakemake -c1 -k --logger workbench --logger-workbench-events-file events.ndjson
+  Snakefile: /work/flow/Snakefile
+  Base directory: /work/flow
+  Run directory: /work/flow
+  Working directory: /work/flow
+  Config file(s): []
+  Config MD5: 99914b932bd37a50b983c5e7c90ae93b
+
+Building DAG of jobs...
+Using shell: /opt/homebrew/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job      count
+-----  -------
+make         2
+all          1
+total        3
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Mon Oct 26 20:18:49 2026]
+localrule make:
+    output: out/b.txt
+    log: logs/b.log
+    jobid: 2
+    benchmark: bench/b.tsv
+    reason: Missing output files: out/b.txt
+    wildcards: s=b
+    resources: tmpdir=/tmp
+RuleException:
+CalledProcessError in file "/work/flow/Snakefile", line 9:
+Command 'set -euo pipefail;  echo making b > logs/b.log; test b != b && echo ok > out/b.txt' returned non-zero exit status 1.
+[Mon Oct 26 20:18:49 2026]
+Error in rule make:
+    message: None
+    jobid: 2
+    output: out/b.txt
+    log: logs/b.log (check log file(s) for error details)
+    shell:
+        echo making b > logs/b.log; test b != b && echo ok > out/b.txt
+        (command exited with non-zero exit code)
+Select jobs to execute...
+Execute 1 jobs...
+
+[Mon Oct 26 20:18:49 2026]
+localrule make:
+    output: out/a.txt
+    log: logs/a.log
+    jobid: 1
+    benchmark: bench/a.tsv
+    reason: Missing output files: out/a.txt
+    wildcards: s=a
+    resources: tmpdir=/tmp
+Benchmark: unable to collect cpu and memory benchmark statistics: 
+[Mon Oct 26 20:18:49 2026]
+Finished jobid: 1 (Rule: make)
+1 of 3 steps (33%) done
+Exiting because a job execution failed. Look above for error messages
+Complete log(s): /work/flow/.snakemake/log/2026-10-26T201849.148477.snakemake.log
+Elapsed time: 0:00:00.177039
+WorkflowError:
+At least one job did not complete successfully.

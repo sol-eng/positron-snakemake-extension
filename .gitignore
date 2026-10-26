@@ -7,3 +7,4 @@ syntaxes
 build-test
 .claude/
 *.log
+!src/positron/test/fixtures/*.log

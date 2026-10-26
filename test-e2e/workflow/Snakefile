@@ -1,0 +1,13 @@
+# The workflow test-e2e/run.js drives inside Positron.
+rule all:
+    input: expand("out/{s}.txt", s=["a", "b"])
+
+rule make:
+    output: "out/{s}.txt"
+    log: "logs/{s}.log"
+    benchmark: "bench/{s}.tsv"
+    shell: "echo making {wildcards.s} > {log}; echo {wildcards.s} > {output}"
+
+rule slow:
+    output: "slow.txt"
+    shell: "sleep 60; touch {output}"

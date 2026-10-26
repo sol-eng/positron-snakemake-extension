@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.1.0 (Positron fork)
+
+First release of the Positron fork, based on upstream 0.8.2 ([82bc85d](https://github.com/snakemake/snakemake-lang-vscode-plugin/commit/82bc85d)).
+
+- Pipeline Runs view: run, dry-run, stop, finish, force kill, run again and rerun incomplete; live status per rule and job from the workbench logger plugin, or from Snakemake's output without it.
+- Jobs as Posit Workbench jobs (workbench executor plugin), and Snakemake itself as a Workbench Job (headless runs).
+- Job and run dashboards, rule and job graphs, report and output summary in the Viewer and Data Explorer.
+- Debug a `script:` job in the console with its `snakemake` object.
+- Positron Assistant tools to list, inspect, launch and stop runs.
+- Run lines, selections and `run:` blocks in the Python console.
+
 ## [0.8.2](https://github.com/snakemake/snakemake-lang-vscode-plugin/compare/v0.8.1...v0.8.2) (2026-05-21)
 
 

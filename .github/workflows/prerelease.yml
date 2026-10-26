@@ -1,0 +1,77 @@
+# Builds the VSIX on every push to main and publishes it as a numbered
+# pre-release, keeping the most recent ones. Fork-only: upstream's CI is in
+# main.yml.
+name: Pre-release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  KEEP_PRERELEASES: 5
+
+jobs:
+  prerelease:
+    name: Build and publish pre-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          # the history and tags, to list the changes since the last release
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: npm clean install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build VSIX
+        run: npm run package
+
+      - name: Publish pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p 'require("./package.json").version')-dev.${GITHUB_RUN_NUMBER}"
+          short="${GITHUB_SHA::7}"
+          vsix="positron-snakemake-${version}.vsix"
+          mv positron-snakemake.vsix "$vsix"
+          {
+            echo "Development build of [\`${short}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}) on \`main\`."
+            echo
+            echo "Install it in Positron with **Extensions: Install from VSIX...**. It may contain unreleased or unfinished changes."
+            echo
+            echo "Changes since the last release:"
+            echo
+            git log --format='- %s' "$(gh release view --json tagName --jq .tagName)..${GITHUB_SHA}" 2>/dev/null || true
+          } > notes.md
+          gh release create "v${version}" "$vsix" \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Positron Snakemake ${version} (${short})" \
+            --notes-file notes.md
+
+      - name: Remove older pre-releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName,isPrerelease,createdAt \
+            --jq "[.[] | select(.isPrerelease)] | sort_by(.createdAt) | reverse | .[${KEEP_PRERELEASES}:] | .[].tagName" |
+            while read -r tag; do
+              gh release delete "$tag" --cleanup-tag --yes
+            done

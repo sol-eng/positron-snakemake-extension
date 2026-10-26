@@ -2,8 +2,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
+import { activatePositron, hasConflictingExtension, isPositron } from './positron'; // Positron:
 
 export function activate(context: vscode.ExtensionContext) {
+    // Positron: stand down if the extension this fork replaces is also installed
+    if (hasConflictingExtension()) return;
     const snakemakeManager = new SnakemakeManager();
     const selector = { scheme: 'file', language: 'snakemake' }
 
@@ -34,6 +37,9 @@ export function activate(context: vscode.ExtensionContext) {
             }
         })
     );
+
+    // Positron: pipeline runs, console integration and Assistant tools
+    if (isPositron()) activatePositron(context);
 }
 
 

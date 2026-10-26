@@ -1,20 +1,20 @@
 {
-    "name": "snakemake-lang",
-    "displayName": "Snakemake Language",
+    "name": "positron-snakemake",
+    "displayName": "Positron Snakemake",
     "icon": "logo-snake.png",
-    "description": "Basic syntax, language, and snippet support for Snakefiles (Snakemake workflow definition files)",
-    "version": "0.8.2",
-    "publisher": "snakemake",
+    "description": "Snakemake language support, plus running and following Snakemake pipelines in Positron, locally or as Posit Workbench jobs",
+    "version": "0.1.0",
+    "publisher": "posit",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/snakemake/snakemake-lang-vscode-plugin"
+        "url": "https://github.com/sol-eng/positron-snakemake-extension"
     },
     "bugs": {
-        "url": "https://github.com/snakemake/snakemake-lang-vscode-plugin/issues"
+        "url": "https://github.com/sol-eng/positron-snakemake-extension/issues"
     },
     "engines": {
-        "vscode": "^1.75.0",
+        "vscode": "^1.96.0",
         "node": ">=18"
     },
     "categories": [
@@ -69,18 +69,770 @@
                 "language": "snakemake",
                 "path": "./snippets/snakemake.json"
             }
-        ]
+        ],
+        "commands": [
+            {
+                "command": "snakemake.positron.runSelection",
+                "title": "Run Line or Selection in Console",
+                "category": "Snakemake",
+                "icon": "$(play)"
+            },
+            {
+                "command": "snakemake.positron.runBlock",
+                "title": "Run `run:` Block in Console",
+                "category": "Snakemake",
+                "icon": "$(run-all)"
+            },
+            {
+                "command": "snakemake.positron.openInDataExplorer",
+                "title": "Open in Data Explorer",
+                "category": "Snakemake",
+                "icon": "$(table)"
+            },
+            {
+                "command": "snakemake.positron.runs.run",
+                "title": "Run Pipeline...",
+                "category": "Snakemake",
+                "icon": "$(play)"
+            },
+            {
+                "command": "snakemake.positron.runs.dryRun",
+                "title": "Dry Run Pipeline...",
+                "category": "Snakemake",
+                "icon": "$(eye)"
+            },
+            {
+                "command": "snakemake.positron.runs.runAgain",
+                "title": "Run Again",
+                "category": "Snakemake",
+                "icon": "$(debug-restart)"
+            },
+            {
+                "command": "snakemake.positron.runs.rerunIncomplete",
+                "title": "Run Again, Rerunning Incomplete Jobs",
+                "category": "Snakemake",
+                "icon": "$(debug-continue)"
+            },
+            {
+                "command": "snakemake.positron.runs.stop",
+                "title": "Stop Run",
+                "category": "Snakemake",
+                "icon": "$(debug-stop)"
+            },
+            {
+                "command": "snakemake.positron.runs.finishJobs",
+                "title": "Stop After Running Jobs Finish",
+                "category": "Snakemake",
+                "icon": "$(debug-pause)"
+            },
+            {
+                "command": "snakemake.positron.runs.kill",
+                "title": "Force Kill Run",
+                "category": "Snakemake",
+                "icon": "$(close)"
+            },
+            {
+                "command": "snakemake.positron.runs.unlock",
+                "title": "Unlock Working Directory",
+                "category": "Snakemake",
+                "icon": "$(unlock)"
+            },
+            {
+                "command": "snakemake.positron.runs.showOutput",
+                "title": "Show Run Output",
+                "category": "Snakemake",
+                "icon": "$(output)"
+            },
+            {
+                "command": "snakemake.positron.runs.openLog",
+                "title": "Open Snakemake Log",
+                "category": "Snakemake",
+                "icon": "$(file)"
+            },
+            {
+                "command": "snakemake.positron.runs.remove",
+                "title": "Remove from List",
+                "category": "Snakemake",
+                "icon": "$(clear-all)"
+            },
+            {
+                "command": "snakemake.positron.runs.delete",
+                "title": "Delete Run...",
+                "category": "Snakemake",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "snakemake.positron.runs.deleteOutput",
+                "title": "Delete Workflow Outputs...",
+                "category": "Snakemake",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "snakemake.positron.runs.openReport",
+                "title": "Create and Open Report",
+                "category": "Snakemake",
+                "icon": "$(graph)"
+            },
+            {
+                "command": "snakemake.positron.runs.openDag",
+                "title": "Show Job Graph",
+                "category": "Snakemake",
+                "icon": "$(type-hierarchy)"
+            },
+            {
+                "command": "snakemake.positron.runs.openRulegraph",
+                "title": "Show Rule Graph",
+                "category": "Snakemake",
+                "icon": "$(type-hierarchy-sub)"
+            },
+            {
+                "command": "snakemake.positron.runs.openSummary",
+                "title": "Open Output Summary in Data Explorer",
+                "category": "Snakemake",
+                "icon": "$(table)"
+            },
+            {
+                "command": "snakemake.positron.runs.lint",
+                "title": "Lint Workflow",
+                "category": "Snakemake",
+                "icon": "$(checklist)"
+            },
+            {
+                "command": "snakemake.positron.runs.cancelJob",
+                "title": "Cancel Workbench Job",
+                "category": "Snakemake",
+                "icon": "$(debug-stop)"
+            },
+            {
+                "command": "snakemake.positron.runs.showJob",
+                "title": "Open Job Dashboard",
+                "category": "Snakemake",
+                "icon": "$(dashboard)"
+            },
+            {
+                "command": "snakemake.positron.runs.debugJob",
+                "title": "Debug Job in Console",
+                "category": "Snakemake",
+                "icon": "$(debug-console)"
+            },
+            {
+                "command": "snakemake.positron.runs.openJobLog",
+                "title": "Open Job Log",
+                "category": "Snakemake",
+                "icon": "$(file)"
+            },
+            {
+                "command": "snakemake.positron.runs.copyJobId",
+                "title": "Copy Workbench Job ID",
+                "category": "Snakemake",
+                "icon": "$(copy)"
+            },
+            {
+                "command": "snakemake.positron.runs.showRunDashboard",
+                "title": "Open Run Dashboard",
+                "category": "Snakemake",
+                "icon": "$(dashboard)"
+            },
+            {
+                "command": "snakemake.positron.runs.refresh",
+                "title": "Refresh Pipeline Runs",
+                "category": "Snakemake",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "snakemake.positron.runs.diagnostics",
+                "title": "Show Run Diagnostics",
+                "category": "Snakemake"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "snakemake",
+                    "title": "Snakemake",
+                    "icon": "media/snakemake.svg"
+                }
+            ]
+        },
+        "views": {
+            "snakemake": [
+                {
+                    "id": "snakemake.runs",
+                    "name": "Pipeline Runs",
+                    "type": "tree",
+                    "when": "isPositron"
+                }
+            ]
+        },
+        "viewsWelcome": [
+            {
+                "view": "snakemake.runs",
+                "contents": "No pipeline runs yet.\n[Run Pipeline](command:snakemake.positron.runs.run)\nSnakemake not found? [Show diagnostics](command:snakemake.positron.runs.diagnostics)."
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "snakemake.positron.runSelection",
+                "key": "ctrl+enter",
+                "mac": "cmd+enter",
+                "when": "isPositron && editorTextFocus && editorLangId == snakemake"
+            },
+            {
+                "command": "snakemake.positron.runBlock",
+                "key": "ctrl+shift+enter",
+                "mac": "cmd+shift+enter",
+                "when": "isPositron && editorTextFocus && editorLangId == snakemake"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "snakemake.positron.runSelection",
+                    "when": "isPositron && editorLangId == snakemake"
+                },
+                {
+                    "command": "snakemake.positron.runBlock",
+                    "when": "isPositron && editorLangId == snakemake"
+                },
+                {
+                    "command": "snakemake.positron.openInDataExplorer",
+                    "when": "isPositron && resourceFilename =~ /\\.(csv|tsv)$|^benchmark.*\\.txt$/i"
+                },
+                {
+                    "command": "snakemake.positron.runs.runAgain",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.rerunIncomplete",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.finishJobs",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.openLog",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.remove",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.cancelJob",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.showJob",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.debugJob",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.openJobLog",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.copyJobId",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.runs.run",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.dryRun",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.stop",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.kill",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.unlock",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.showOutput",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.delete",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.deleteOutput",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.openReport",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.openDag",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.openRulegraph",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.openSummary",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.lint",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.showRunDashboard",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.refresh",
+                    "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.runs.diagnostics",
+                    "when": "isPositron"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "snakemake.positron.runSelection",
+                    "when": "isPositron && editorLangId == snakemake",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "snakemake.positron.runBlock",
+                    "when": "isPositron && editorLangId == snakemake",
+                    "group": "navigation@1"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "snakemake.positron.openInDataExplorer",
+                    "when": "isPositron && !explorerResourceIsFolder && resourceFilename =~ /\\.(csv|tsv)$|^benchmark.*\\.txt$/i",
+                    "group": "navigation@20"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "command": "snakemake.positron.openInDataExplorer",
+                    "when": "isPositron && resourceFilename =~ /\\.(csv|tsv)$|^benchmark.*\\.txt$/i",
+                    "group": "navigation@20"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "snakemake.positron.runs.run",
+                    "when": "isPositron && resourceLangId == snakemake",
+                    "group": "navigation@0"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "snakemake.positron.runs.run",
+                    "when": "view == snakemake.runs",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.refresh",
+                    "when": "view == snakemake.runs",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.dryRun",
+                    "when": "view == snakemake.runs",
+                    "group": "more@0"
+                },
+                {
+                    "command": "snakemake.positron.runs.unlock",
+                    "when": "view == snakemake.runs",
+                    "group": "more@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.diagnostics",
+                    "when": "view == snakemake.runs",
+                    "group": "more@2"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "snakemake.positron.runs.runAgain",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "snakemake.positron.runs.stop",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(queued|starting|running)$/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.showOutput",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.showRunDashboard",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "inline@3"
+                },
+                {
+                    "command": "snakemake.positron.runs.delete",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "inline@9"
+                },
+                {
+                    "command": "snakemake.positron.runs.stop",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(queued|starting|running)$/",
+                    "group": "1_run@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.finishJobs",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.running$/",
+                    "group": "1_run@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.kill",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(queued|starting|running)$/",
+                    "group": "1_run@3"
+                },
+                {
+                    "command": "snakemake.positron.runs.runAgain",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "1_run@4"
+                },
+                {
+                    "command": "snakemake.positron.runs.rerunIncomplete",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "1_run@5"
+                },
+                {
+                    "command": "snakemake.positron.runs.unlock",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "1_run@6"
+                },
+                {
+                    "command": "snakemake.positron.runs.showRunDashboard",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "2_files@0"
+                },
+                {
+                    "command": "snakemake.positron.runs.showOutput",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "2_files@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.openLog",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "2_files@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.openReport",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "2_reports@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.openRulegraph",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "2_reports@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.openDag",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "2_reports@3"
+                },
+                {
+                    "command": "snakemake.positron.runs.openSummary",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\./",
+                    "group": "2_reports@4"
+                },
+                {
+                    "command": "snakemake.positron.runs.remove",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "3_manage@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.delete",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "3_manage@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.deleteOutput",
+                    "when": "view == snakemake.runs && viewItem =~ /^run\\.(succeeded|failed|stopped|lost)$/",
+                    "group": "3_manage@3"
+                },
+                {
+                    "command": "snakemake.positron.runs.debugJob",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\..*\\+script/",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "snakemake.positron.runs.cancelJob",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\.(submitted|queued|running)\\b.*\\+wb/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.showJob",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\./",
+                    "group": "1_job@0"
+                },
+                {
+                    "command": "snakemake.positron.runs.debugJob",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\..*\\+script/",
+                    "group": "1_job@1"
+                },
+                {
+                    "command": "snakemake.positron.runs.openJobLog",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\..*\\+log/",
+                    "group": "1_job@2"
+                },
+                {
+                    "command": "snakemake.positron.runs.copyJobId",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\..*\\+wb/",
+                    "group": "1_job@3"
+                },
+                {
+                    "command": "snakemake.positron.runs.cancelJob",
+                    "when": "view == snakemake.runs && viewItem =~ /^job\\.(submitted|queued|running)\\b.*\\+wb/",
+                    "group": "2_manage@1"
+                }
+            ]
+        },
+        "languageModelTools": [
+            {
+                "name": "snakemake_listRuns",
+                "displayName": "List Snakemake Runs",
+                "toolReferenceName": "snakemakeRuns",
+                "canBeReferencedInPrompt": true,
+                "icon": "$(list-tree)",
+                "userDescription": "List the Snakemake pipeline runs started in this workspace.",
+                "modelDescription": "List the Snakemake pipeline runs started from Positron in this workspace, most recent first, with their status (queued, starting, running, succeeded, failed, stopped, lost), Snakefile, targets, start and end times, and job totals.",
+                "tags": [
+                    "positron-assistant",
+                    "requires-workspace",
+                    "snakemake"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {}
+                },
+                "when": "isPositron"
+            },
+            {
+                "name": "snakemake_runStatus",
+                "displayName": "Snakemake Run Status",
+                "toolReferenceName": "snakemakeRunStatus",
+                "canBeReferencedInPrompt": true,
+                "icon": "$(pulse)",
+                "userDescription": "Show the status of a Snakemake run, including why jobs failed.",
+                "modelDescription": "Get the detailed status of one Snakemake pipeline run: per-rule job counts, Snakemake's error messages, the jobs still running with their Workbench job ids, and every failed job with its rule, wildcards, shell command and the last lines of its log files. Use this to explain why a run failed.",
+                "tags": [
+                    "positron-assistant",
+                    "requires-workspace",
+                    "snakemake"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "runName": {
+                            "type": "string",
+                            "description": "Name of the run, as listed by snakemake_listRuns. Defaults to the most recent run."
+                        }
+                    }
+                },
+                "when": "isPositron"
+            },
+            {
+                "name": "snakemake_launchPipeline",
+                "displayName": "Launch Snakemake Pipeline",
+                "toolReferenceName": "snakemakeLaunch",
+                "canBeReferencedInPrompt": true,
+                "icon": "$(play)",
+                "userDescription": "Start a Snakemake pipeline run, after confirmation.",
+                "modelDescription": "Start a Snakemake pipeline run from Positron, which then appears in the Pipeline Runs view. The user confirms before it starts. Returns the new run's name; follow it with snakemake_runStatus.",
+                "tags": [
+                    "positron-assistant",
+                    "requires-workspace",
+                    "snakemake",
+                    "requires-actions"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "required": [
+                        "snakefile"
+                    ],
+                    "properties": {
+                        "snakefile": {
+                            "type": "string",
+                            "description": "Path of the workflow's Snakefile, absolute or relative to the workspace folder."
+                        },
+                        "targets": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "Target rules or files to build. Defaults to the workflow's first rule."
+                        },
+                        "profile": {
+                            "type": "string",
+                            "description": "Snakemake profile directory or name to use."
+                        },
+                        "config": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": [
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "description": "Config overrides, as given with --config key=value."
+                        },
+                        "dryRun": {
+                            "type": "boolean",
+                            "description": "Only show what would be done (--dry-run)."
+                        },
+                        "rerunIncomplete": {
+                            "type": "boolean",
+                            "description": "Rerun jobs whose output is incomplete (--rerun-incomplete)."
+                        }
+                    }
+                },
+                "when": "isPositron"
+            },
+            {
+                "name": "snakemake_stopRun",
+                "displayName": "Stop Snakemake Run",
+                "toolReferenceName": "snakemakeStop",
+                "canBeReferencedInPrompt": true,
+                "icon": "$(debug-stop)",
+                "userDescription": "Stop a running Snakemake pipeline, after confirmation.",
+                "modelDescription": "Stop a running Snakemake pipeline run: Snakemake cancels its running jobs (including Workbench jobs) and exits. The user confirms first.",
+                "tags": [
+                    "positron-assistant",
+                    "requires-workspace",
+                    "snakemake",
+                    "requires-actions"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "runName": {
+                            "type": "string",
+                            "description": "Name of the run, as listed by snakemake_listRuns. Defaults to the most recent run."
+                        }
+                    }
+                },
+                "when": "isPositron"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Snakemake",
+            "properties": {
+                "snakemake.run.executable": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "Path to the `snakemake` executable used to run pipelines in Positron. By default it is taken from the active Python interpreter's environment, a `.venv` in the workspace, the `PATH`, or `~/.local/bin`."
+                },
+                "snakemake.run.cores": {
+                    "type": "string",
+                    "default": "all",
+                    "markdownDescription": "Cores for runs on this machine (`--cores`): a number or `all`."
+                },
+                "snakemake.run.jobs": {
+                    "type": "number",
+                    "default": 10,
+                    "markdownDescription": "Jobs to run at once when running jobs as Workbench jobs (`--jobs`)."
+                },
+                "snakemake.run.extraArgs": {
+                    "type": "array",
+                    "default": [],
+                    "markdownDescription": "Extra arguments added to every Snakemake run started from Positron, e.g. `[\"--show-failed-logs\"]`.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "snakemake.run.printShellCommands": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "Print each job's shell command in the run output (`--printshellcmds`)."
+                },
+                "snakemake.run.keepScripts": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "Keep the scripts Snakemake generates for `script:` rules (`--skip-script-cleanup`), so a job can be debugged in the console afterwards. They are deleted with the run."
+                },
+                "snakemake.run.launcherCli": {
+                    "type": "string",
+                    "default": "posit-workbench-smk-launcher",
+                    "markdownDescription": "The Posit Workbench launcher CLI, used to list clusters, submit headless runs, and cancel Workbench jobs. Found next to `snakemake` if it is not on the `PATH`."
+                },
+                "snakemake.run.confirm": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "Ask for confirmation before force killing a run, cancelling a job, deleting outputs, or removing a run from the list."
+                },
+                "snakemake.run.driver": {
+                    "type": "string",
+                    "default": "auto",
+                    "markdownDescription": "Where Snakemake itself runs. As a Workbench Job it keeps running when the session is suspended or stopped; that needs Positron on Posit Workbench and the launcher CLI.",
+                    "enum": [
+                        "auto",
+                        "local",
+                        "job"
+                    ],
+                    "enumDescriptions": [
+                        "Offer to run Snakemake as a Workbench Job when Positron runs in Posit Workbench, otherwise run it in this session.",
+                        "Always run Snakemake in this session.",
+                        "Always run Snakemake as a Workbench Job, without asking."
+                    ]
+                },
+                "snakemake.run.headless.cluster": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "Workbench cluster for Snakemake itself when it runs as a Workbench Job. Asked for when empty and there are several."
+                },
+                "snakemake.run.headless.image": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "Container image for Snakemake itself when it runs as a Workbench Job, if the cluster runs containers. Defaults to this session's image. It needs bash and the same Snakemake environment, on shared storage."
+                },
+                "snakemake.run.headless.cpus": {
+                    "type": "number",
+                    "default": 1,
+                    "markdownDescription": "CPUs for Snakemake itself when it runs as a Workbench Job."
+                },
+                "snakemake.run.headless.memory": {
+                    "type": "number",
+                    "default": 2048,
+                    "markdownDescription": "Memory in MB for Snakemake itself when it runs as a Workbench Job."
+                }
+            }
+        }
     },
     "devDependencies": {
-        "@types/node": "^14 || ^16 || ^18",
-        "@types/vscode": "^1.53.0",
-        "esbuild": "^0.25.2",
+        "@posit-dev/positron": "^0.2.13",
+        "@types/node": "^20.19.43",
+        "@types/vscode": "~1.96.0",
+        "@vscode/vsce": "^3.9.2",
+        "esbuild": "^0.25.12",
         "js-yaml": "^3.13.1",
-        "mustache": "^3.1.0"
+        "mermaid": "^12.2.0",
+        "mustache": "^3.1.0",
+        "typescript": "^5.9.3"
     },
     "main": "dist/extension.js",
     "scripts": {
-        "clean": "rm -rf dist syntaxes languages snippets out",
+        "clean": "rm -rf dist syntaxes languages snippets out build-test *.vsix",
         "regex_build": "mkdir -p syntaxes && node src/js/build_regex.js src/keywords.yaml syntaxes/keywords-regex.json",
         "syntax_build": "npm run regex_build && npx mustache syntaxes/keywords-regex.json src/yaml/snakemake.syntax.yaml | npx js-yaml > syntaxes/snakemake.tmLanguage.json",
         "syntax_inject_build": "npm run regex_build && npx mustache syntaxes/keywords-regex.json src/yaml/snakemake-inject.syntax.yaml | npx js-yaml > syntaxes/snakemake-inject.tmLanguage.json",
@@ -89,9 +841,15 @@
         "js_build": "node build.mjs",
         "build": "npm run syntax_build && npm run syntax_inject_build && npm run language_build && npm run snippets_build && npm run js_build",
         "watch": "tsc --watch",
-        "package": "vsce package",
-        "prepublish": "npm run build",
-        "publish": "vsce publish",
-        "test:unit": "node build-test.mjs && node --test dist/test/snakemake-manager.test.js"
-    }
+        "package": "npm run build && vsce package -o positron-snakemake.vsix",
+        "test:unit": "node build-test.mjs && node --test dist/test/snakemake-manager.test.js",
+        "check-types": "tsc --noEmit",
+        "vscode:prepublish": "npm run build",
+        "test:positron": "esbuild src/positron/test/*.test.ts --bundle --platform=node --format=cjs --outdir=build-test --log-level=warning && node --test build-test/*.test.js",
+        "test": "npm run test:unit && npm run test:positron"
+    },
+    "activationEvents": [
+        "workspaceContains:**/Snakefile",
+        "workspaceContains:**/*.smk"
+    ]
 }

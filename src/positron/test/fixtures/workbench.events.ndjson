@@ -1,0 +1,13 @@
+{"v": 1, "ts": "2026-10-26T10:00:00+00:00", "event": "workflow_started", "workflowId": "w1", "runId": "flow-20261026-100000", "snakefile": "/work/flow/Snakefile", "cwd": "/work/flow", "snakemakeVersion": "9.26.1", "host": "session", "user": "user", "pid": 42}
+{"v": 1, "ts": "2026-10-26T10:00:01+00:00", "event": "rulegraph", "nodes": ["align", "all"], "links": [{"source": "align", "target": "all"}]}
+{"v": 1, "ts": "2026-10-26T10:00:01+00:00", "event": "run_info", "stats": {"align": 2, "all": 1, "total": 3}}
+{"v": 1, "ts": "2026-10-26T10:00:02+00:00", "event": "jobs_started", "jobids": [1, 2]}
+{"v": 1, "ts": "2026-10-26T10:00:02+00:00", "event": "job_info", "jobid": 1, "rule": "align", "wildcards": {"sample": "a"}, "input": ["reads/a.fq"], "output": ["bam/a.bam"], "log": ["logs/a.log"], "benchmark": null, "threads": 4, "resources": {"mem_mb": 8000}, "reason": "Missing output files: bam/a.bam", "local": false, "isCheckpoint": false, "shellcmd": "bwa mem reads/a.fq > bam/a.bam", "cwd": "/work/flow"}
+{"v": 1, "ts": "2026-10-26T10:00:02+00:00", "event": "wb_submitted", "jobid": 1, "externalJobId": "wb-1", "jobName": "snakejob.align.1.sh", "cluster": "Kubernetes", "tags": ["snakemake", "snakemake-run:flow-20261026-100000", "snakemake-jobid:1", "snakemake-rule:align"]}
+{"v": 1, "ts": "2026-10-26T10:00:02+00:00", "event": "job_info", "jobid": 2, "rule": "align", "wildcards": {"sample": "b"}, "input": ["reads/b.fq"], "output": ["bam/b.bam"], "log": ["logs/b.log"], "benchmark": null, "threads": 4, "resources": {"mem_mb": 8000}, "reason": "Missing output files: bam/b.bam", "local": false, "isCheckpoint": false, "shellcmd": "bwa mem reads/b.fq > bam/b.bam", "cwd": "/work/flow"}
+{"v": 1, "ts": "2026-10-26T10:00:02+00:00", "event": "wb_submitted", "jobid": 2, "externalJobId": "wb-2", "jobName": "snakejob.align.2.sh", "cluster": "Kubernetes", "tags": ["snakemake", "snakemake-run:flow-20261026-100000", "snakemake-jobid:2", "snakemake-rule:align"]}
+{"v": 1, "ts": "2026-10-26T10:00:05+00:00", "event": "wb_status", "jobid": 1, "externalJobId": "wb-1", "status": "Running", "exitCode": null, "statusMessage": null}
+{"v": 1, "ts": "2026-10-26T10:00:06+00:00", "event": "wb_status", "jobid": 2, "externalJobId": "wb-2", "status": "Pending", "exitCode": null, "statusMessage": null}
+{"v": 1, "ts": "2026-10-26T10:01:05+00:00", "event": "wb_status", "jobid": 1, "externalJobId": "wb-1", "status": "Finished", "exitCode": 0, "statusMessage": null}
+{"v": 1, "ts": "2026-10-26T10:01:05+00:00", "event": "job_finished", "jobid": 1}
+{"v": 1, "ts": "2026-10-26T10:01:05+00:00", "event": "progress", "done": 1, "total": 3}

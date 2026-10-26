@@ -1,0 +1,18 @@
+{"v": 1, "ts": "2026-10-26T19:18:49.211992+00:00", "event": "workflow_started", "workflowId": "be20cddd-f64d-4f31-8879-82c78d091644", "runId": null, "snakefile": "/work/flow/Snakefile", "basedir": "/work/flow", "cwd": "/work/flow", "configfiles": [], "cmd": "/opt/venv/bin/snakemake -c1 -k --logger workbench --logger-workbench-events-file events.ndjson", "snakemakeVersion": "9.26.1", "host": "host", "user": "user", "pid": 83960}
+{"v": 1, "ts": "2026-10-26T19:18:49.215178+00:00", "event": "rulegraph", "nodes": ["make", "all"], "links": [{"source": "make", "target": "all"}]}
+{"v": 1, "ts": "2026-10-26T19:18:49.216187+00:00", "event": "resources_info", "cores": 1}
+{"v": 1, "ts": "2026-10-26T19:18:49.216262+00:00", "event": "resources_info"}
+{"v": 1, "ts": "2026-10-26T19:18:49.216716+00:00", "event": "run_info", "stats": {"make": 2, "all": 1, "total": 3}}
+{"v": 1, "ts": "2026-10-26T19:18:49.247081+00:00", "event": "jobs_started", "jobids": [2]}
+{"v": 1, "ts": "2026-10-26T19:18:49.247752+00:00", "event": "job_info", "jobid": 2, "rule": "make", "ruleMsg": null, "wildcards": {"s": "b"}, "input": [], "output": ["out/b.txt"], "log": ["logs/b.log"], "benchmark": "bench/b.tsv", "threads": 1, "resources": {"tmpdir": "/tmp"}, "reason": "Missing output files: out/b.txt", "local": true, "isCheckpoint": false, "shellcmd": "echo making b > logs/b.log; test b != b && echo ok > out/b.txt", "cwd": "/work/flow"}
+{"v": 1, "ts": "2026-10-26T19:18:49.273983+00:00", "event": "error", "exception": "RuleException", "message": "RuleException:\nCalledProcessError in file \"/work/flow/Snakefile\", line 9:\nCommand 'set -euo pipefail;  echo making b > logs/b.log; test b != b && echo ok > out/b.txt' returned non-zero exit status 1."}
+{"v": 1, "ts": "2026-10-26T19:18:49.274582+00:00", "event": "job_error", "jobid": 2, "rule": "make", "msg": null, "log": ["logs/b.log"], "shellcmd": "echo making b > logs/b.log; test b != b && echo ok > out/b.txt", "externalJobId": null, "aux": {}}
+{"v": 1, "ts": "2026-10-26T19:18:49.301317+00:00", "event": "jobs_started", "jobids": [1]}
+{"v": 1, "ts": "2026-10-26T19:18:49.302191+00:00", "event": "job_info", "jobid": 1, "rule": "make", "ruleMsg": null, "wildcards": {"s": "a"}, "input": [], "output": ["out/a.txt"], "log": ["logs/a.log"], "benchmark": "bench/a.tsv", "threads": 1, "resources": {"tmpdir": "/tmp"}, "reason": "Missing output files: out/a.txt", "local": true, "isCheckpoint": false, "shellcmd": "echo making a > logs/a.log; test a != b && echo ok > out/a.txt", "cwd": "/work/flow"}
+{"v": 1, "ts": "2026-10-26T19:18:49.323397+00:00", "event": "log", "level": "WARNING", "msg": "Benchmark: unable to collect cpu and memory benchmark statistics: "}
+{"v": 1, "ts": "2026-10-26T19:18:49.324964+00:00", "event": "job_finished", "jobid": 1}
+{"v": 1, "ts": "2026-10-26T19:18:49.325074+00:00", "event": "progress", "done": 1, "total": 3}
+{"v": 1, "ts": "2026-10-26T19:18:49.325284+00:00", "event": "log", "level": "ERROR", "msg": "Exiting because a job execution failed. Look above for error messages"}
+{"v": 1, "ts": "2026-10-26T19:18:49.325569+00:00", "event": "log", "logfile": "/work/flow/.snakemake/log/2026-10-26T201849.148477.snakemake.log", "msg": "Complete log(s): /work/flow/.snakemake/log/2026-10-26T201849.148477.snakemake.log"}
+{"v": 1, "ts": "2026-10-26T19:18:49.327937+00:00", "event": "error", "exception": "WorkflowError", "message": "WorkflowError:\nAt least one job did not complete successfully."}
+{"v": 1, "ts": "2026-10-26T19:18:49.328037+00:00", "event": "closed", "errors": 3, "lastProgress": {"done": 1, "total": 3}}

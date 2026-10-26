@@ -1,0 +1,23 @@
+Manual checks on Posit Workbench (a Positron session), with posit-sdk-snakemake
+installed into the session's Snakemake environment on shared storage.
+
+1. Snakemake: Show Run Diagnostics
+   - Snakemake found, logger and executor plugins installed, Workbench session: yes,
+     launcher whoami answers via "session".
+2. Run Pipeline on posit-sdk-snakemake/examples, "As Workbench jobs", cluster and resource profile
+   - Jobs appear in the Workbench Jobs pane, named snakejob.<rule>.<id>.sh, tagged
+     snakemake-run:<run name>, snakemake-rule:<rule>.
+   - The tree shows jobs queued, then running, then completed; the job dashboard shows
+     the Workbench job id, and Workbench Output fetches its stdout.
+3. Stop a run while a Workbench job runs
+   - The job is cancelled in Workbench; the run ends as "stopped".
+4. Force Kill a run while a Workbench job runs
+   - The run ends; the job left behind is cancelled ("Cancelled 1 Workbench job(s)").
+5. Run Pipeline, "As a Workbench Job" for Snakemake itself
+   - The run is "queued", then "running"; suspend the session and resume: the run is
+     still followed, or has finished.
+   - Stop: Snakemake's job gets SIGTERM, cancels its jobs, and the run ends as "stopped".
+6. Debug Job in Console on a script: job (Python and R)
+   - The console's working directory is the workflow's, `snakemake.input` is defined.
+7. Rule graph, job graph, report and output summary open in the Viewer and Data Explorer.
+8. Assistant: "why did my last snakemake run fail?" uses snakemake_runStatus.

@@ -1,0 +1,23 @@
+{"v": 1, "ts": "2026-10-26T19:18:38.966024+00:00", "event": "workflow_started", "workflowId": "1ece2a8c-b9d3-49cd-80dd-b5573462bbd1", "runId": null, "snakefile": "/work/example/Snakefile", "basedir": "/work/example", "cwd": "/work/example", "configfiles": [], "cmd": "/opt/venv/bin/snakemake -c1 --logger workbench --logger-workbench-events-file events.ndjson", "snakemakeVersion": "9.26.1", "host": "host", "user": "user", "pid": 83934}
+{"v": 1, "ts": "2026-10-26T19:18:38.969816+00:00", "event": "rulegraph", "nodes": ["generate", "square", "sum", "all"], "links": [{"source": "generate", "target": "square"}, {"source": "square", "target": "sum"}, {"source": "sum", "target": "all"}]}
+{"v": 1, "ts": "2026-10-26T19:18:38.970883+00:00", "event": "resources_info", "cores": 1}
+{"v": 1, "ts": "2026-10-26T19:18:38.970961+00:00", "event": "resources_info"}
+{"v": 1, "ts": "2026-10-26T19:18:38.971530+00:00", "event": "run_info", "stats": {"generate": 1, "square": 1, "sum": 1, "all": 1, "total": 4}}
+{"v": 1, "ts": "2026-10-26T19:18:39.002167+00:00", "event": "jobs_started", "jobids": [3]}
+{"v": 1, "ts": "2026-10-26T19:18:39.002985+00:00", "event": "job_info", "jobid": 3, "rule": "generate", "ruleMsg": null, "wildcards": {}, "input": ["scripts/step1_generate.py"], "output": ["numbers.txt"], "log": [], "benchmark": null, "threads": 1, "resources": {"tmpdir": "/tmp", "mem_mb": 512, "mem": "512 MB", "mem_mib": 489}, "reason": "Missing output files: numbers.txt", "local": true, "isCheckpoint": false, "shellcmd": "python3 scripts/step1_generate.py numbers.txt", "cwd": "/work/example"}
+{"v": 1, "ts": "2026-10-26T19:18:39.079712+00:00", "event": "job_finished", "jobid": 3}
+{"v": 1, "ts": "2026-10-26T19:18:39.079952+00:00", "event": "progress", "done": 1, "total": 4}
+{"v": 1, "ts": "2026-10-26T19:18:39.107835+00:00", "event": "jobs_started", "jobids": [2]}
+{"v": 1, "ts": "2026-10-26T19:18:39.108683+00:00", "event": "job_info", "jobid": 2, "rule": "square", "ruleMsg": null, "wildcards": {}, "input": ["numbers.txt", "scripts/step2_square.py"], "output": ["squares.txt"], "log": [], "benchmark": null, "threads": 1, "resources": {"tmpdir": "/tmp", "mem_mb": 512, "mem": "512 MB", "mem_mib": 489}, "reason": "Missing output files: squares.txt; Input files updated by another job: numbers.txt", "local": true, "isCheckpoint": false, "shellcmd": "python3 scripts/step2_square.py numbers.txt squares.txt", "cwd": "/work/example"}
+{"v": 1, "ts": "2026-10-26T19:18:39.177999+00:00", "event": "job_finished", "jobid": 2}
+{"v": 1, "ts": "2026-10-26T19:18:39.178258+00:00", "event": "progress", "done": 2, "total": 4}
+{"v": 1, "ts": "2026-10-26T19:18:39.205590+00:00", "event": "jobs_started", "jobids": [1]}
+{"v": 1, "ts": "2026-10-26T19:18:39.206463+00:00", "event": "job_info", "jobid": 1, "rule": "sum", "ruleMsg": null, "wildcards": {}, "input": ["squares.txt", "scripts/step3_sum.py"], "output": ["sum.txt"], "log": [], "benchmark": null, "threads": 1, "resources": {"tmpdir": "/tmp", "mem_mb": 512, "mem": "512 MB", "mem_mib": 489}, "reason": "Missing output files: sum.txt; Input files updated by another job: squares.txt", "local": true, "isCheckpoint": false, "shellcmd": "python3 scripts/step3_sum.py squares.txt sum.txt", "cwd": "/work/example"}
+{"v": 1, "ts": "2026-10-26T19:18:39.270059+00:00", "event": "job_finished", "jobid": 1}
+{"v": 1, "ts": "2026-10-26T19:18:39.270236+00:00", "event": "progress", "done": 3, "total": 4}
+{"v": 1, "ts": "2026-10-26T19:18:39.296386+00:00", "event": "jobs_started", "jobids": [0]}
+{"v": 1, "ts": "2026-10-26T19:18:39.296881+00:00", "event": "job_info", "jobid": 0, "rule": "all", "ruleMsg": null, "wildcards": {}, "input": ["sum.txt"], "output": [], "log": [], "benchmark": null, "threads": 1, "resources": {"tmpdir": "/tmp"}, "reason": "Input files updated by another job: sum.txt", "local": true, "isCheckpoint": false, "shellcmd": null, "cwd": "/work/example"}
+{"v": 1, "ts": "2026-10-26T19:18:39.297502+00:00", "event": "job_finished", "jobid": 0}
+{"v": 1, "ts": "2026-10-26T19:18:39.297561+00:00", "event": "progress", "done": 4, "total": 4}
+{"v": 1, "ts": "2026-10-26T19:18:39.297836+00:00", "event": "log", "logfile": "/work/example/.snakemake/log/2026-10-26T201838.898102.snakemake.log", "msg": "Complete log(s): /work/example/.snakemake/log/2026-10-26T201838.898102.snakemake.log"}
+{"v": 1, "ts": "2026-10-26T19:18:39.298308+00:00", "event": "closed", "errors": 0, "lastProgress": {"done": 4, "total": 4}}

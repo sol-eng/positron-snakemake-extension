@@ -4,3 +4,6 @@ dist
 languages
 snippets
 syntaxes
+build-test
+.claude/
+*.log

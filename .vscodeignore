@@ -6,3 +6,15 @@ reference/**
 node_modules/**
 src/**
 package-lock.json
+build-test/**
+build.mjs
+build-test.mjs
+tsconfig.json
+Makefile
+misc/**
+CONTRIBUTING.md
+*.vsix
+test-e2e/**
+.claude/**
+dist/test/**
+*.log

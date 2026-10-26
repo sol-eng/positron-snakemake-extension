@@ -15,7 +15,7 @@ export type LaunchConfig = {
   configfiles: string[];
   /** `--config key=value` overrides */
   config: [string, string][];
-  /** run jobs as Workbench jobs; else locally, or as the profile says */
+  /** run jobs as Workbench jobs, locally, or (undefined) as the profiles say */
   executor?: "local" | "workbench";
   workbench?: { cluster?: string; resourceProfile?: string };
   /** `--cores` for local runs: a number or `all` */
@@ -119,8 +119,11 @@ export function buildRunArgs(
         config.workbench.resourceProfile
       );
     if (config.jobs) args.push("--jobs", String(config.jobs));
-  } else if (config.cores) {
-    args.push("--cores", config.cores);
+  } else {
+    // explicit, so that a profile's executor (e.g. the workflow profile's)
+    // cannot override the choice
+    if (config.executor === "local") args.push("--executor", "local");
+    if (config.cores) args.push("--cores", config.cores);
   }
   if (config.keepGoing) args.push("--keep-going");
   if (config.rerunIncomplete) args.push("--rerun-incomplete");

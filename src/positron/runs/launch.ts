@@ -63,7 +63,15 @@ export async function pickLaunch(
   const configured = await pickConfig(cwd, previous);
   if (!configured) return undefined;
 
-  const profileSays = profile ? readProfileExecutor(profile) : undefined;
+  // the workflow profile wins over the chosen one, key by key
+  const implicit = workflowProfile(snakefile, cwd);
+  const implicitSays = implicit ? readProfileExecutor(implicit) : undefined;
+  const chosenSays = profile ? readProfileExecutor(profile) : undefined;
+  const profileSays = implicitSays
+    ? { executor: implicitSays, source: path.relative(cwd, implicit!) || implicit! }
+    : chosenSays
+      ? { executor: chosenSays, source: path.basename(profile!) }
+      : undefined;
   const jobs = await pickExecutor(environment, profileSays, previous, dryRun);
   if (jobs === null) return undefined;
 
@@ -223,7 +231,7 @@ function findProfiles(snakefile: string, cwd: string): string[] {
     }
     for (const name of names) {
       const dir = path.join(root, name);
-      if (fs.existsSync(path.join(dir, "config.yaml"))) profiles.add(dir);
+      if (profileFile(dir)) profiles.add(dir);
     }
   }
   return [...profiles];
@@ -265,14 +273,31 @@ async function pickProfile(
   return picked.profile;
 }
 
+/** A profile's settings file: `profile.yaml`, or `config.yaml` as before. */
+function profileFile(dir: string): string | undefined {
+  return ["profile.yaml", "config.yaml"]
+    .map((name) => path.join(dir, name))
+    .find((file) => fs.existsSync(file));
+}
+
 function readProfileExecutor(profile: string): string | undefined {
+  const file = profileFile(profile);
   try {
-    return profileExecutor(
-      fs.readFileSync(path.join(profile, "config.yaml"), "utf8")
-    );
+    return file ? profileExecutor(fs.readFileSync(file, "utf8")) : undefined;
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The workflow profile Snakemake applies by itself: `profiles/default` in the
+ * working directory or next to the Snakefile. Its settings override those of
+ * `--profile`; only the command line overrides them.
+ */
+function workflowProfile(snakefile: string, cwd: string): string | undefined {
+  return [cwd, path.dirname(snakefile)]
+    .map((dir) => path.join(dir, "profiles", "default"))
+    .find((dir) => profileFile(dir));
 }
 
 async function pickConfig(
@@ -347,42 +372,51 @@ async function pickConfig(
  */
 async function pickExecutor(
   environment: RunEnvironment,
-  profileSays: string | undefined,
+  profileSays: { executor: string; source: string } | undefined,
   previous: LaunchConfig | undefined,
   dryRun: boolean
 ): Promise<Pick<LaunchConfig, "executor" | "workbench"> | null> {
-  if (profileSays) {
-    // the profile sets the executor and its settings, e.g. the cluster
-    return { executor: undefined };
-  }
+  // a dry run plans the jobs the same way wherever they would run
+  if (dryRun) return { executor: profileSays ? undefined : "local" };
   // in a Workbench session, or with an API key for the Workbench server
   const reachable =
     environment.inWorkbench || !!environment.env.WORKBENCH_API_KEY;
-  if (dryRun || !environment.executorPlugin || !reachable)
-    return { executor: "local" };
-  const local = {
+  const canUseWorkbench = environment.executorPlugin && reachable;
+  if (!profileSays && !canUseWorkbench) return { executor: "local" };
+  type Item = vscode.QuickPickItem & { executor?: "local" | "workbench" };
+  const asProfile: Item = {
+    label: "$(settings) As the profile says",
+    description: profileSays
+      ? `${profileSays.executor}, from ${profileSays.source}`
+      : undefined
+  };
+  const local: Item = {
     label: "$(vm) In this session",
     description: "jobs run here, with the cores this session has",
-    executor: "local" as const
+    executor: "local"
   };
-  const workbench = {
+  const workbench: Item = {
     label: "$(cloud) As Workbench jobs",
     description: "each job is a Posit Workbench job on a cluster",
-    executor: "workbench" as const
+    executor: "workbench"
   };
-  const items =
-    previous?.executor === "workbench" ? [workbench, local] : [local, workbench];
+  const options = canUseWorkbench
+    ? previous?.executor === "workbench"
+      ? [workbench, local]
+      : [local, workbench]
+    : [local];
+  const items = profileSays ? [asProfile, ...options] : options;
   const picked = await vscode.window.showQuickPick(items, {
     title: "Run Pipeline: Where should the jobs run?",
     ignoreFocusOut: true
   });
   if (!picked) return null;
+  if (!picked.executor) return { executor: undefined };
   if (picked.executor === "local") return { executor: "local" };
   const settings = await pickWorkbench(environment, previous?.workbench);
   if (settings === null) return null;
   return { executor: "workbench", workbench: settings };
 }
-
 /** The cluster and resource profile for Workbench jobs, or null if cancelled. */
 async function pickWorkbench(
   environment: RunEnvironment,

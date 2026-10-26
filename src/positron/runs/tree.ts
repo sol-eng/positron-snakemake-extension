@@ -59,7 +59,7 @@ export function executorLabel(run: Run): string {
   if (config.executor === "workbench")
     return `Workbench jobs${config.workbench?.cluster ? ` on ${config.workbench.cluster}` : ""}`;
   if (config.executor === "local") return "locally";
-  return config.profile ? `as the profile ${config.profile} says` : "locally";
+  return "as the profiles say";
 }
 
 export function formatDuration(ms: number): string {

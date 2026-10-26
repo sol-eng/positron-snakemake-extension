@@ -158,6 +158,7 @@ test("run arguments: targets first, list options last", () => {
       targets: ["all"],
       configfiles: ["/w/config.yaml"],
       config: [["samples", "s.tsv"]],
+      executor: "local",
       cores: "4",
       keepGoing: true
     }),
@@ -167,6 +168,7 @@ test("run arguments: targets first, list options last", () => {
   assert.deepEqual(args, [
     "all",
     "--snakefile", "/w/workflow/Snakefile",
+    "--executor", "local",
     "--cores", "4",
     "--keep-going",
     "--printshellcmds",
@@ -197,6 +199,12 @@ test("run arguments for Workbench jobs", () => {
     "--jobs", "10",
     "--dry-run"
   ]);
+});
+
+test("without an executor, the profiles decide", () => {
+  const args = buildRunArgs(config({ cores: "all" }), runFiles("/w", "r"), { withLogger: false });
+  assert.ok(!args.includes("--executor"));
+  assert.deepEqual(args.slice(-2), ["--cores", "all"]);
 });
 
 test("workflow arguments for unlock, report and summary", () => {

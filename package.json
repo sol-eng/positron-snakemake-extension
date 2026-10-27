@@ -3,7 +3,7 @@
     "displayName": "Positron Snakemake",
     "icon": "logo-snake.png",
     "description": "Snakemake language support, plus running and following Snakemake pipelines in Positron, locally or as Posit Workbench jobs",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "publisher": "posit",
     "license": "MIT",
     "repository": {

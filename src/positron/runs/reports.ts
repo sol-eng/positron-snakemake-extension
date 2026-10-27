@@ -1,13 +1,15 @@
-// Shows Snakemake's report for a run in Positron's Viewer pane, and its
+// Shows Snakemake's report for a run in Positron's Viewer pane, with a
+// button back to the run's dashboard, and its
 // output summary in the Data Explorer. The workflow graphs are views of the
 // dashboard (see dashboard/panel.ts).
 
 import * as fs from "fs";
 import * as vscode from "vscode";
-import type { PositronApi, PreviewPanel } from "@posit-dev/positron";
+import type { PositronApi } from "@posit-dev/positron";
 
 import { snakemake } from "./env";
-import { reportWithBackButton, tsvOnly } from "./graph";
+import { tsvOnly } from "./graph";
+import type { HtmlViewer } from "./htmlViewer";
 import { readyEnvironment } from "./index";
 import { workflowArgs } from "./launchArgs";
 import { registerCommand } from "./log";
@@ -17,44 +19,10 @@ import { runTitle } from "./tree";
 
 export function activateReports(
   context: vscode.ExtensionContext,
-  api: PositronApi,
-  store: RunStore
+  _api: PositronApi,
+  store: RunStore,
+  viewer: HtmlViewer
 ) {
-  // one panel for the report shown, with a button back to its run
-  let reportPanel: PreviewPanel | undefined;
-  let reportRun: Run | undefined;
-  const showReport = (r: Run) => {
-    const title = `Report: ${runTitle(r)}`;
-    reportRun = r;
-    if (!reportPanel) {
-      reportPanel = api.window.createPreviewPanel(
-        "snakemake.report",
-        title,
-        true,
-        { enableScripts: true, localResourceRoots: [] }
-      );
-      reportPanel.webview.onDidReceiveMessage((message) => {
-        if (message?.type !== "back" || !reportRun) return;
-        vscode.commands.executeCommand(
-          "snakemake.positron.runs.showRunDashboard",
-          { kind: "run", run: reportRun }
-        );
-        reportPanel?.dispose();
-      });
-      reportPanel.onDidDispose(() => {
-        reportPanel = undefined;
-        reportRun = undefined;
-      });
-    } else {
-      reportPanel.title = title;
-      reportPanel.reveal(true);
-    }
-    reportPanel.webview.html = reportWithBackButton(
-      fs.readFileSync(r.files.report, "utf8"),
-      runTitle(r)
-    );
-  };
-  context.subscriptions.push({ dispose: () => reportPanel?.dispose() });
 
   /** Run `snakemake` for the run's workflow, with a progress notification. */
   const run = async (run: Run, title: string, args: string[]) => {
@@ -92,7 +60,17 @@ export function activateReports(
           "--report",
           r.files.report
         ]).then(() => true, failed("report"));
-        if (done && fs.existsSync(r.files.report)) showReport(r);
+        if (done && fs.existsSync(r.files.report))
+          viewer.show({
+            file: r.files.report,
+            title: `Report: ${runTitle(r)}`,
+            backLabel: `\u2190 ${runTitle(r)}`,
+            onBack: () =>
+              vscode.commands.executeCommand(
+                "snakemake.positron.runs.showRunDashboard",
+                { kind: "run", run: r }
+              )
+          });
       })
     ),
     registerCommand("snakemake.positron.runs.openSummary", (node?: unknown) =>

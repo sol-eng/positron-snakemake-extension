@@ -1,5 +1,9 @@
 # Change Log
 
+## Unreleased
+
+- A job's HTML outputs (e.g. a MultiQC report) open in the Viewer with a button back to the job's dashboard, like Snakemake's report does, and without Positron's default webview styles. Both now use one shared Viewer panel (`htmlViewer.ts`), as in the Nextflow extension.
+
 ## 0.1.0 (2026-10-27)
 
 First release of the Positron fork, based on upstream 0.8.2 ([82bc85d](https://github.com/snakemake/snakemake-lang-vscode-plugin/commit/82bc85d)). In VS Code it behaves like upstream.

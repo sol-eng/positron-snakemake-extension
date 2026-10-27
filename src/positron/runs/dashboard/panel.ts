@@ -22,6 +22,7 @@ import {
 import { resolveJob, withRun } from "../select";
 import { isActive, type Run, type RunStore } from "../store";
 import { driverLabel, executorLabel, runDuration, runTitle } from "../tree";
+import type { HtmlViewer } from "../htmlViewer";
 import { dashboardHtml } from "./html";
 import { isInside, readJobFiles, readTail, stripAnnotation } from "./jobFiles";
 
@@ -50,7 +51,8 @@ export class Dashboard implements vscode.Disposable {
   constructor(
     private readonly api: PositronApi,
     private readonly store: RunStore,
-    private readonly media: vscode.Uri
+    private readonly media: vscode.Uri,
+    private readonly viewer: HtmlViewer
   ) {
     this.subscription = store.onDidChange((run) => {
       if (this.view && (!run || run.files.dir === this.view.dir))
@@ -220,7 +222,14 @@ export class Dashboard implements vscode.Disposable {
     if (!allowed || !fs.existsSync(file)) return;
     const ext = path.extname(file).toLowerCase();
     if (ext === ".html" || ext === ".htm") {
-      this.api.window.previewHtml(fs.realpathSync(file));
+      // e.g. a MultiQC report, with a way back to the job or the run
+      const job = this.current()?.job;
+      this.viewer.show({
+        file: fs.realpathSync(file),
+        title: path.basename(file),
+        backLabel: `\u2190 ${job ? `${job.rule} (${jobLabel(job)})` : runTitle(run)}`,
+        onBack: () => (job ? this.showJob(run, job) : this.showRun(run))
+      });
     } else if (
       DATA_EXPLORER_EXTENSIONS.includes(ext) ||
       /benchmark/i.test(file)
@@ -375,12 +384,14 @@ export function logTail(job: JobState, cwd: string): string | undefined {
 export function activateDashboard(
   context: vscode.ExtensionContext,
   api: PositronApi,
-  store: RunStore
+  store: RunStore,
+  viewer: HtmlViewer
 ) {
   const dashboard = new Dashboard(
     api,
     store,
-    vscode.Uri.joinPath(context.extensionUri, "dist", "media")
+    vscode.Uri.joinPath(context.extensionUri, "dist", "media"),
+    viewer
   );
   context.subscriptions.push(
     dashboard,

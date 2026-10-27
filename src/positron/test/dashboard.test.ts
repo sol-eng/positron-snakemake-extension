@@ -15,7 +15,8 @@ import {
   stripAnnotation
 } from "../runs/dashboard/jobFiles";
 import { applyEvent } from "../runs/events";
-import { mermaidOnly, reportWithBackButton, ruleGraphMermaid, tsvOnly } from "../runs/graph";
+import { mermaidOnly, ruleGraphMermaid, tsvOnly } from "../runs/graph";
+import { pageWithBackButton } from "../runs/htmlPage";
 import { emptyProgress, type JobState } from "../runs/model";
 
 const fixture = (name: string) =>
@@ -110,16 +111,27 @@ test("graph and summary output after other stdout", () => {
   assert.equal(tsvOnly("noise\noutput_file\tdate\n"), "output_file\tdate\n");
 });
 
-test("the report gets a button back to its run", () => {
-  const report = '<html><head><title>r</title></head><body><script>const s = "<head></body>";</script><main>report</main></body></html>';
-  const html = reportWithBackButton(report, 'flow <"run">');
-  // inserted before the last </body>, not the one in the script's string
+test("an HTML page gets a way back, without Positron's webview defaults", () => {
+  const page =
+    '<html><head><title>r</title></head><body><a href="#stats">Stats</a>' +
+    '<img src="plot.png"><img src="data:image/png;base64,AAA"><script src="https://cdn.example/x.js"></script>' +
+    '<link rel="stylesheet" href="style/report.css"><script>const s = "<head></body>";</script>' +
+    "<main>report</main></body></html>";
+  const html = pageWithBackButton(page, {
+    backLabel: 'flow <"run">',
+    resolve: (relative) => `https://webview/dir/${relative}`
+  });
+  // the reset comes first in the real head, the button before the last </body>
+  assert.ok(html.startsWith('<html><head><style id="snakemake-positron-reset">'));
+  assert.match(html, /body \{[^}]*padding: revert;/);
   assert.ok(html.indexOf("snakemake-positron-back") > html.indexOf("<main>report</main>"));
   assert.ok(html.endsWith("</body></html>"));
   assert.match(html, /postMessage\(\{ type: "back" \}\)/);
   assert.ok(html.includes("flow &#60;&#34;run&#34;&#62;") && !html.includes('flow <"run">'));
-  // Positron's webview defaults are undone first thing in the real head
-  assert.ok(html.startsWith('<html><head><style id="snakemake-positron-reset">'));
-  assert.match(html, /body \{[^}]*padding: revert;/);
-  assert.equal(html.split("snakemake-positron-reset").length, 2);
+  // files next to the page load from the webview; links, data and remote URLs stay
+  assert.ok(html.includes('src="https://webview/dir/plot.png"'));
+  assert.ok(html.includes('href="https://webview/dir/style/report.css"'));
+  assert.ok(html.includes('href="#stats"'));
+  assert.ok(html.includes('src="data:image/png;base64,AAA"'));
+  assert.ok(html.includes('src="https://cdn.example/x.js"'));
 });

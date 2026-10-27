@@ -1,6 +1,6 @@
 // Entry point for everything specific to the Positron fork. Upstream files
 // only call into this folder through small hooks marked `// Positron:`.
-import type * as vscode from "vscode";
+import * as vscode from "vscode";
 import type { PositronApi } from "@posit-dev/positron";
 
 import { activateDataExplorer } from "./dataExplorer";
@@ -9,6 +9,7 @@ import { activateLmTools } from "./lmTools";
 import { activateRunEmbeddedCode } from "./runEmbeddedCode";
 import { activateRuns } from "./runs";
 import { activateDashboard } from "./runs/dashboard/panel";
+import { HtmlViewer } from "./runs/htmlViewer";
 import { activateReports } from "./runs/reports";
 
 export { hasConflictingExtension } from "./conflict";
@@ -42,7 +43,13 @@ export function activatePositron(context: vscode.ExtensionContext) {
   activateDataExplorer(context);
   const runs = activateRuns(context, api);
   activateDebugJob(context, api, runs);
-  activateReports(context, api, runs);
-  activateDashboard(context, api, runs);
+  // one Viewer panel for HTML pages with a way back: the report, job outputs
+  const viewer = new HtmlViewer(
+    api,
+    vscode.Uri.joinPath(context.extensionUri, "dist", "media")
+  );
+  context.subscriptions.push(viewer);
+  activateReports(context, api, runs, viewer);
+  activateDashboard(context, api, runs, viewer);
   activateLmTools(context, api, runs);
 }

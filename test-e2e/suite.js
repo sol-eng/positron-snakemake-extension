@@ -88,6 +88,33 @@ exports.run = async function () {
     });
     const planned = await waitFor(dry.runName, (r) => !["queued", "starting", "running"].includes(r.status), 30000);
     check("dry run plans the slow job", planned.status === "succeeded" && planned.totals.total === 1, { status: planned.status, totals: planned.totals });
+
+    // graphs open as views of the dashboard
+    await vscode.commands.executeCommand("snakemake.positron.runs.openRulegraph", node(done));
+    await vscode.commands.executeCommand("snakemake.positron.runs.openDag", node(done));
+    check("graphs opened", true);
+
+    // Posit Assistant: the skill and the agent commands, the way it reaches them
+    const ai = acquirePositronApi().ai;
+    const roots = typeof ai.getAgentSkillRoots === "function" ? await ai.getAgentSkillRoots() : [];
+    const root = roots.find((r) => r.endsWith("assistant-skills"));
+    check("skill root registered", root && fs.existsSync(path.join(root, "snakemake-runs", "SKILL.md")), roots);
+    const allowed = await ai.getAgentAllowedCommands();
+    const ours = Object.fromEntries(allowed.filter((c) => c.id.startsWith("snakemake.positron.assistant.")).map((c) => [c.id.split(".").pop(), c]));
+    check("agent commands listed", ["listRuns", "runStatus", "launchPipeline", "stopRun"].every((n) => ours[n]), Object.keys(ours));
+    check("read-only flags", ours.listRuns?.readOnly === true && ours.runStatus?.readOnly === true && !ours.launchPipeline?.readOnly && !ours.stopRun?.readOnly);
+    const launched = await ai.validateAndExecuteCommand("snakemake.positron.assistant.launchPipeline", [{ snakefile: "Snakefile", targets: ["broken"] }]);
+    const brokenRun = launched.ok && JSON.parse(launched.result);
+    check("assistant launches a run", brokenRun && brokenRun.runName, launched);
+    await waitFor(brokenRun.runName, (r) => !["queued", "starting", "running"].includes(r.status), 60000);
+    const status = await ai.validateAndExecuteCommand("snakemake.positron.assistant.runStatus", [brokenRun.runName]);
+    const parsed = status.ok && JSON.parse(status.result);
+    const failedJob = parsed && parsed.failedJobs && parsed.failedJobs[0];
+    check("assistant sees why it failed", parsed.status === "failed" && failedJob && failedJob.rule === "broken" &&
+      failedJob.logs[0].tail.includes("reference genome not found"), parsed && { status: parsed.status, failedJobs: parsed.failedJobs });
+    check("result fits the assistant", status.result.length < 32000, status.result.length);
+    const listed = await ai.validateAndExecuteCommand("snakemake.positron.assistant.listRuns", []);
+    check("assistant lists runs", listed.ok && JSON.parse(listed.result).some((r) => r.runName === brokenRun.runName));
   } catch (e) {
     check("no exception", false, String(e && e.stack || e));
   }

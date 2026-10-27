@@ -1,5 +1,6 @@
-// Shows the job and run dashboards in Positron's Viewer, keeps them up to
-// date while the run is active, and handles what the page asks for.
+// Shows the run and job dashboards, and the workflow graphs, in one page in
+// Positron's Viewer, keeps it up to date while the run is active, and handles
+// what the page asks for.
 
 import * as fs from "fs";
 import * as path from "path";
@@ -7,8 +8,10 @@ import * as vscode from "vscode";
 import type { PositronApi, PreviewPanel } from "@posit-dev/positron";
 
 import { jobOutput } from "../driverJob";
-import { runEnvironment } from "../env";
+import { runEnvironment, snakemake } from "../env";
+import { mermaidOnly, ruleGraphMermaid } from "../graph";
 import { describeRun } from "../index";
+import { workflowArgs } from "../launchArgs";
 import { registerCommand } from "../log";
 import {
   formatWildcards,
@@ -22,9 +25,15 @@ import { driverLabel, executorLabel, runDuration, runTitle } from "../tree";
 import { dashboardHtml } from "./html";
 import { isInside, readJobFiles, readTail, stripAnnotation } from "./jobFiles";
 
+type GraphKind = "rules" | "jobs";
+
 type View =
   | { kind: "run"; dir: string }
-  | { kind: "job"; dir: string; jobid: number };
+  | { kind: "job"; dir: string; jobid: number }
+  | { kind: "graph"; dir: string; graph: GraphKind };
+
+/** A graph Snakemake draws, by run directory and kind. */
+type DrawnGraph = { mermaid?: string; error?: string; drawing?: boolean };
 
 const REFRESH_MS = 2000;
 const LOG_LINES = 8;
@@ -36,10 +45,12 @@ export class Dashboard implements vscode.Disposable {
   private timer: NodeJS.Timeout | undefined;
   private refreshing = false;
   private readonly subscription: vscode.Disposable;
+  private readonly graphs = new Map<string, DrawnGraph>();
 
   constructor(
     private readonly api: PositronApi,
-    private readonly store: RunStore
+    private readonly store: RunStore,
+    private readonly media: vscode.Uri
   ) {
     this.subscription = store.onDidChange((run) => {
       if (this.view && (!run || run.files.dir === this.view.dir))
@@ -53,6 +64,10 @@ export class Dashboard implements vscode.Disposable {
 
   showJob(run: Run, job: JobState) {
     this.show({ kind: "job", dir: run.files.dir, jobid: job.jobid });
+  }
+
+  showGraph(run: Run, graph: GraphKind) {
+    this.show({ kind: "graph", dir: run.files.dir, graph });
   }
 
   dispose() {
@@ -70,11 +85,15 @@ export class Dashboard implements vscode.Disposable {
         "snakemake.dashboard",
         data.title,
         true,
-        { enableScripts: true, localResourceRoots: [] }
+        { enableScripts: true, localResourceRoots: [this.media] }
+      );
+      const mermaidUri = this.panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(this.media, "mermaid.min.js")
       );
       this.panel.webview.html = dashboardHtml(
         data,
-        this.panel.webview.cspSource
+        this.panel.webview.cspSource,
+        mermaidUri.toString()
       );
       this.panel.webview.onDidReceiveMessage((message) => this.handle(message));
       this.panel.onDidDispose(() => {
@@ -112,7 +131,7 @@ export class Dashboard implements vscode.Disposable {
     if (!this.view) return undefined;
     const run = this.store.get(this.view.dir);
     if (!run) return undefined;
-    if (this.view.kind === "run") return { run };
+    if (this.view.kind !== "job") return { run };
     return { run, job: run.progress.jobs[this.view.jobid] };
   }
 
@@ -121,7 +140,60 @@ export class Dashboard implements vscode.Disposable {
     if (!found) return undefined;
     const { run, job } = found;
     if (this.view?.kind === "job") return job ? jobData(run, job) : undefined;
+    if (this.view?.kind === "graph") return this.graphData(run, this.view.graph);
     return runData(run);
+  }
+
+  /**
+   * The rule graph comes from the run's own events, coloured by progress and
+   * live while it runs; without them, and for the job graph, Snakemake draws
+   * it, in the background: the page says so meanwhile, and is updated when
+   * it is done.
+   */
+  private graphData(run: Run, graph: GraphKind) {
+    const live =
+      graph === "rules"
+        ? ruleGraphMermaid(run.progress, run.record.config.dryRun)
+        : undefined;
+    const key = `${run.files.dir}#${graph}`;
+    let drawn = this.graphs.get(key);
+    if (!live && !drawn) {
+      drawn = { drawing: true };
+      this.graphs.set(key, drawn);
+      this.draw(run, graph, drawn);
+    }
+    return {
+      kind: "graph" as const,
+      id: key,
+      title: `${graph === "jobs" ? "Jobs" : "Rules"}: ${runTitle(run)}`,
+      runName: runTitle(run),
+      status: run.status,
+      graph,
+      mermaid: live ?? drawn?.mermaid,
+      error: live ? undefined : drawn?.error,
+      colored: !!live,
+      live: !!live && isActive(run)
+    };
+  }
+
+  private async draw(run: Run, graph: GraphKind, into: DrawnGraph) {
+    const { config } = run.record;
+    try {
+      const environment = await runEnvironment();
+      const stdout = await snakemake(environment, config.cwd, [
+        ...config.targets,
+        ...workflowArgs(config),
+        graph === "jobs" ? "--dag" : "--rulegraph",
+        "mermaid-js"
+      ]);
+      into.mermaid = mermaidOnly(stdout);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      into.error = `Snakemake could not draw the ${graph === "jobs" ? "job" : "rule"} graph:\n\n${message.trim().split("\n").slice(-12).join("\n")}`;
+    }
+    into.drawing = false;
+    // the page may show another view by now; refresh shows whatever it shows
+    this.refresh();
   }
 
   private async handle(message: any) {
@@ -196,9 +268,19 @@ export class Dashboard implements vscode.Disposable {
       case "report":
         return command("openReport", runNode);
       case "rulegraph":
-        return command("openRulegraph", runNode);
+      case "rules":
+        return this.showGraph(run, "rules");
       case "dag":
-        return command("openDag", runNode);
+      case "jobs":
+        return this.showGraph(run, "jobs");
+      case "back":
+        return this.showRun(run);
+      case "redraw":
+        if (this.view?.kind === "graph") {
+          this.graphs.delete(`${run.files.dir}#${this.view.graph}`);
+          this.refresh();
+        }
+        return;
       case "summary":
         return command("openSummary", runNode);
     }
@@ -295,7 +377,11 @@ export function activateDashboard(
   api: PositronApi,
   store: RunStore
 ) {
-  const dashboard = new Dashboard(api, store);
+  const dashboard = new Dashboard(
+    api,
+    store,
+    vscode.Uri.joinPath(context.extensionUri, "dist", "media")
+  );
   context.subscriptions.push(
     dashboard,
     registerCommand("snakemake.positron.runs.showJob", (node?: unknown) => {
@@ -311,6 +397,12 @@ export function activateDashboard(
     registerCommand(
       "snakemake.positron.runs.showRunDashboard",
       (node?: unknown) => withRun(store, node, (run) => dashboard.showRun(run))
+    ),
+    registerCommand("snakemake.positron.runs.openRulegraph", (node?: unknown) =>
+      withRun(store, node, (run) => dashboard.showGraph(run, "rules"))
+    ),
+    registerCommand("snakemake.positron.runs.openDag", (node?: unknown) =>
+      withRun(store, node, (run) => dashboard.showGraph(run, "jobs"))
     )
   );
 }

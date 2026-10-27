@@ -243,6 +243,115 @@
                 "command": "snakemake.positron.runs.diagnostics",
                 "title": "Show Run Diagnostics",
                 "category": "Snakemake"
+            },
+            {
+                "command": "snakemake.positron.assistant.listRuns",
+                "title": "List Pipeline Runs (for the Assistant)",
+                "category": "Snakemake",
+                "agent": {
+                    "description": "List the Snakemake pipeline runs started from Positron in this workspace, most recent first, with their status, Snakefile, targets, times and job totals.",
+                    "returns": "JSON array of runs: runName, status, snakefile, targets, dryRun, startedAt, finishedAt, totals.",
+                    "readOnly": true
+                }
+            },
+            {
+                "command": "snakemake.positron.assistant.runStatus",
+                "title": "Show Pipeline Run Status (for the Assistant)",
+                "category": "Snakemake",
+                "agent": {
+                    "description": "Detailed status of one Snakemake pipeline run: per-rule job counts, Snakemake's errors, running jobs with their Posit Workbench job ids, and every failed job with its rule, wildcards, shell command and the end of its log files. Use it to explain why a run failed.",
+                    "args": [
+                        {
+                            "name": "runName",
+                            "description": "Name of the run, as listRuns lists it. Defaults to the most recent run.",
+                            "required": false,
+                            "schema": {
+                                "type": "string"
+                            }
+                        }
+                    ],
+                    "returns": "JSON object describing the run; failedJobs[].logs[].tail has the end of each log file.",
+                    "readOnly": true
+                }
+            },
+            {
+                "command": "snakemake.positron.assistant.launchPipeline",
+                "title": "Launch Pipeline (for the Assistant)",
+                "category": "Snakemake",
+                "agent": {
+                    "description": "Start a Snakemake pipeline run (or a dry run) that appears in Positron's Pipeline Runs view. Without a profile, its jobs run in the Positron session.",
+                    "args": [
+                        {
+                            "name": "launch",
+                            "description": "What to run. Only snakefile is required.",
+                            "required": true,
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "snakefile"
+                                ],
+                                "properties": {
+                                    "snakefile": {
+                                        "type": "string",
+                                        "description": "The workflow's Snakefile, absolute or relative to the workspace folder."
+                                    },
+                                    "targets": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Target rules or files. Defaults to the workflow's first rule."
+                                    },
+                                    "profile": {
+                                        "type": "string",
+                                        "description": "Snakemake profile directory or name."
+                                    },
+                                    "config": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": [
+                                                "string",
+                                                "number",
+                                                "boolean"
+                                            ]
+                                        },
+                                        "description": "Config overrides, as for --config key=value."
+                                    },
+                                    "dryRun": {
+                                        "type": "boolean",
+                                        "description": "Only show what would run (--dry-run)."
+                                    },
+                                    "rerunIncomplete": {
+                                        "type": "boolean",
+                                        "description": "Rerun jobs whose outputs are incomplete (--rerun-incomplete)."
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "returns": "JSON object with the new run's runName and status, or an error.",
+                    "readOnly": false
+                }
+            },
+            {
+                "command": "snakemake.positron.assistant.stopRun",
+                "title": "Stop Pipeline Run (for the Assistant)",
+                "category": "Snakemake",
+                "agent": {
+                    "description": "Stop a running Snakemake pipeline run. Snakemake cancels its running jobs, including Posit Workbench jobs, and exits.",
+                    "args": [
+                        {
+                            "name": "runName",
+                            "description": "Name of the run, as listRuns lists it. Defaults to the most recent run.",
+                            "required": false,
+                            "schema": {
+                                "type": "string"
+                            }
+                        }
+                    ],
+                    "returns": "JSON object with the runName and stopping: true, or an error.",
+                    "readOnly": false
+                }
             }
         ],
         "viewsContainers": {
@@ -401,6 +510,22 @@
                 {
                     "command": "snakemake.positron.runs.diagnostics",
                     "when": "isPositron"
+                },
+                {
+                    "command": "snakemake.positron.assistant.listRuns",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.assistant.runStatus",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.assistant.launchPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.assistant.stopRun",
+                    "when": "false"
                 }
             ],
             "editor/context": [

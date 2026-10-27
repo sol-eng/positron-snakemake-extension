@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { test } from "node:test";
 
-import { scriptJson } from "../runs/dashboard/html";
+import { dashboardHtml, scriptJson } from "../runs/dashboard/html";
 import {
   findJobScript,
   formatBytes,
@@ -15,7 +15,7 @@ import {
   stripAnnotation
 } from "../runs/dashboard/jobFiles";
 import { applyEvent } from "../runs/events";
-import { graphHtml, mermaidOnly, ruleGraphMermaid, tsvOnly } from "../runs/graph";
+import { mermaidOnly, ruleGraphMermaid, tsvOnly } from "../runs/graph";
 import { emptyProgress, type JobState } from "../runs/model";
 
 const fixture = (name: string) =>
@@ -91,9 +91,18 @@ test("the live rule graph", () => {
   assert.match(mermaid, /r0\["a 0\/2"\]:::running/);
   assert.match(mermaid, /r1\["all 0\/1"\]:::pending/);
   assert.match(mermaid, /r0 --> r1/);
-  const html = graphHtml(mermaid, "Rules <x>", "https://media/mermaid.min.js", "vscode-resource:");
-  assert.match(html, /Rules &lt;x>/);
-  assert.ok(!html.includes('"a 0/2"]:::running</'));
+});
+
+test("the dashboard page loads mermaid and keeps its data inert", () => {
+  const data = { kind: "graph", graph: "rules", mermaid: 'flowchart TB\n  r0["</script><b>"]', runName: "r" };
+  const html = dashboardHtml(data, "vscode-resource:", "https://media/mermaid.min.js");
+  const csp = html.match(/content="(default-src[^"]*)"/)![1];
+  assert.match(csp, /script-src 'nonce-[^']+' vscode-resource:/);
+  assert.match(html, /<script nonce="[^"]+" src="https:\/\/media\/mermaid.min.js"><\/script>/);
+  // the graph text is JSON in the page, not markup
+  assert.ok(!html.includes("</script><b>"));
+  assert.ok(html.includes(scriptJson(data)));
+  assert.match(html, /function renderGraph/);
 });
 
 test("graph and summary output after other stdout", () => {

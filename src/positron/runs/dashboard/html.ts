@@ -1,6 +1,8 @@
-// The dashboard page shown in the Viewer. One page renders either a job or
-// a run from JSON data, and re-renders in place when the extension posts an
-// update. Everything is rendered client-side and escaped there.
+// The dashboard page shown in the Viewer. One page renders a run, a job, or
+// a workflow graph from JSON data, and re-renders in place when the extension
+// posts an update, so moving between them stays in one Viewer page with a way
+// back. Everything is rendered client-side and escaped there; graphs are
+// drawn with the bundled mermaid.js.
 
 import { randomUUID } from "crypto";
 
@@ -12,13 +14,18 @@ export function scriptJson(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
-export function dashboardHtml(data: unknown, cspSource: string): string {
+export function dashboardHtml(
+  data: unknown,
+  cspSource: string,
+  mermaidUri: string
+): string {
   const nonce = randomUUID();
   const csp = [
     "default-src 'none'",
-    `script-src 'nonce-${nonce}'`,
+    `script-src 'nonce-${nonce}' ${cspSource}`,
     `style-src ${cspSource} 'unsafe-inline'`,
-    "img-src data:"
+    "img-src data:",
+    `font-src ${cspSource}`
   ].join("; ");
   return `<!DOCTYPE html>
 <html lang="en">
@@ -31,6 +38,7 @@ export function dashboardHtml(data: unknown, cspSource: string): string {
 <body>
 <main id="root"></main>
 <script nonce="${nonce}" id="data" type="application/json">${scriptJson(data)}</script>
+<script nonce="${nonce}" src="${mermaidUri}"></script>
 <script nonce="${nonce}">${SCRIPT}</script>
 </body>
 </html>`;
@@ -88,6 +96,10 @@ const STYLE = `
   .bar span { position: absolute; top: 0; bottom: 0; left: 0; }
   .fail-item { margin: 8px 0; }
   .empty { color: var(--vscode-descriptionForeground); }
+  .toggle button.on { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+  .graph { overflow: auto; margin-top: 8px; }
+  .graph svg { max-width: none; }
+  pre.error { color: var(--vscode-errorForeground); }
 `;
 
 // Runs in the webview. Kept as plain JavaScript in a string.
@@ -228,9 +240,51 @@ const SCRIPT = String.raw`
     return html;
   }
 
+  function renderGraph(d) {
+    const kind = d.graph === "jobs" ? "Job" : "Rule";
+    let html = "<h1>" + kind + " graph " + badge(d.status) + "</h1>" +
+      '<div class="sub">' + esc(d.runName) + (d.graph === "rules" && d.live ? " · updates as the run progresses" : "") + "</div>" +
+      '<div class="actions">' +
+        '<button data-msg="back">← ' + esc(d.runName) + "</button>" +
+        '<span class="toggle"><button data-msg="rules"' + (d.graph === "rules" ? ' class="on"' : "") + ">Rules</button>" +
+        '<button data-msg="jobs"' + (d.graph === "jobs" ? ' class="on"' : "") + ">Jobs</button></span>" +
+        (d.mermaid || d.error ? '<button data-msg="redraw">Redraw</button>' : "") +
+      "</div>";
+    if (d.error) return html + '<pre class="error">' + esc(d.error) + "</pre>";
+    if (!d.mermaid) return html + '<div class="note">Drawing the ' + kind.toLowerCase() + " graph...</div>";
+    if (d.graph === "rules" && d.colored) html += '<div class="note">Green: done, blue: running, red: failed, dashed: still to run.</div>';
+    return html + '<div id="graph" class="graph"></div>';
+  }
+
+  // mermaid draws asynchronously; keep the last drawing, so re-rendering the
+  // page for a live update does not flicker
+  let drawn = { text: undefined, svg: "" };
+  let drawCount = 0;
+  if (window.mermaid) {
+    const dark = document.body.classList.contains("vscode-dark") || document.body.classList.contains("vscode-high-contrast");
+    window.mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: dark ? "dark" : "default", maxEdges: 5000, maxTextSize: 1000000 });
+  }
+  function drawGraph(d) {
+    const el = document.getElementById("graph");
+    if (!el) return;
+    if (drawn.text === d.mermaid) { el.innerHTML = drawn.svg; return; }
+    if (drawn.svg) el.innerHTML = drawn.svg;
+    if (!window.mermaid) { el.innerHTML = '<pre class="error">Could not load mermaid.js to draw the graph.</pre>'; return; }
+    const text = d.mermaid;
+    window.mermaid.render("snakemake-graph-" + ++drawCount, text).then(({ svg }) => {
+      drawn = { text, svg };
+      const current = document.getElementById("graph");
+      if (current && data.kind === "graph" && data.mermaid === text) current.innerHTML = svg;
+    }).catch((e) => {
+      const current = document.getElementById("graph");
+      if (current) current.innerHTML = '<pre class="error">' + esc("Could not draw the graph: " + e) + "</pre>";
+    });
+  }
+
   function render() {
     const scroll = window.scrollY;
-    root.innerHTML = data.kind === "job" ? renderJob(data) : renderRun(data);
+    root.innerHTML = data.kind === "job" ? renderJob(data) : data.kind === "graph" ? renderGraph(data) : renderRun(data);
+    if (data.kind === "graph" && data.mermaid) drawGraph(data);
     window.scrollTo(0, scroll);
   }
 
@@ -247,7 +301,7 @@ const SCRIPT = String.raw`
   });
   window.addEventListener("message", (event) => {
     if (event.data && event.data.type === "update") {
-      if (event.data.data.kind !== data.kind || event.data.data.id !== data.id) opened.clear();
+      if (event.data.data.kind !== data.kind || event.data.data.id !== data.id) { opened.clear(); drawn = { text: undefined, svg: "" }; }
       data = event.data.data;
       render();
     }

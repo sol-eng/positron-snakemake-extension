@@ -11,3 +11,8 @@ rule make:
 rule slow:
     output: "slow.txt"
     shell: "sleep 60; touch {output}"
+
+rule broken:
+    output: "broken.txt"
+    log: "logs/broken.log"
+    shell: "echo 'reference genome not found: genome.fa' > {log}; exit 1"

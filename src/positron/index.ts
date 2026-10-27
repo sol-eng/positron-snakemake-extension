@@ -44,5 +44,5 @@ export function activatePositron(context: vscode.ExtensionContext) {
   activateDebugJob(context, api, runs);
   activateReports(context, api, runs);
   activateDashboard(context, api, runs);
-  activateLmTools(context, runs);
+  activateLmTools(context, api, runs);
 }

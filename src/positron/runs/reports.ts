@@ -1,12 +1,13 @@
-// Shows a run's workflow graphs and Snakemake's report in Positron's Viewer
-// pane, and its output summary in the Data Explorer.
+// Shows Snakemake's report for a run in Positron's Viewer pane, and its
+// output summary in the Data Explorer. The workflow graphs are views of the
+// dashboard (see dashboard/panel.ts).
 
 import * as fs from "fs";
 import * as vscode from "vscode";
 import type { PositronApi } from "@posit-dev/positron";
 
 import { snakemake } from "./env";
-import { graphHtml, mermaidOnly, ruleGraphMermaid, tsvOnly } from "./graph";
+import { tsvOnly } from "./graph";
 import { readyEnvironment } from "./index";
 import { workflowArgs } from "./launchArgs";
 import { registerCommand } from "./log";
@@ -18,26 +19,6 @@ export function activateReports(
   api: PositronApi,
   store: RunStore
 ) {
-  const media = vscode.Uri.joinPath(context.extensionUri, "dist", "media");
-
-  const showGraph = (title: string, mermaid: string) => {
-    const panel = api.window.createPreviewPanel(
-      "snakemake.graph",
-      title,
-      true,
-      { enableScripts: true, localResourceRoots: [media] }
-    );
-    const mermaidUri = panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(media, "mermaid.min.js")
-    );
-    panel.webview.html = graphHtml(
-      mermaid,
-      title,
-      mermaidUri.toString(),
-      panel.webview.cspSource
-    );
-  };
-
   /** Run `snakemake` for the run's workflow, with a progress notification. */
   const run = async (run: Run, title: string, args: string[]) => {
     const environment = await readyEnvironment();
@@ -62,27 +43,6 @@ export function activateReports(
   };
 
   context.subscriptions.push(
-    registerCommand("snakemake.positron.runs.openRulegraph", (node?: unknown) =>
-      withRun(store, node, async (r) => {
-        // the run's own graph, coloured by progress, once Snakemake sent it
-        const live = ruleGraphMermaid(r.progress, r.record.config.dryRun);
-        if (live) return showGraph(`Rules: ${r.record.runName}`, live);
-        const mermaid = await run(r, "Drawing the rule graph...", [
-          "--rulegraph",
-          "mermaid-js"
-        ]).catch(failed("rule graph"));
-        if (mermaid) showGraph(`Rules: ${r.record.runName}`, mermaidOnly(mermaid));
-      })
-    ),
-    registerCommand("snakemake.positron.runs.openDag", (node?: unknown) =>
-      withRun(store, node, async (r) => {
-        const mermaid = await run(r, "Drawing the job graph...", [
-          "--dag",
-          "mermaid-js"
-        ]).catch(failed("job graph"));
-        if (mermaid) showGraph(`Jobs: ${r.record.runName}`, mermaidOnly(mermaid));
-      })
-    ),
     registerCommand("snakemake.positron.runs.openReport", (node?: unknown) =>
       withRun(store, node, async (r) => {
         if (isActive(r)) {

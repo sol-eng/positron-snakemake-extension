@@ -2,6 +2,14 @@
 
 A fork of the [Snakemake Language extension for VS Code](https://github.com/snakemake/snakemake-lang-vscode-plugin) with additions for [Positron](https://positron.posit.co/): running Snakemake pipelines and following them live, locally or as [Posit Workbench](https://posit.co/products/enterprise/workbench/) jobs. Everything below the Positron section is upstream's documentation and applies unchanged.
 
+<p align="center">
+  <img width="960" height="582" alt="Positron Snakemake: running the rnaseq workflow from Positron with its jobs on Posit Workbench, following them in Pipeline Runs and the run dashboard" src="https://github.com/user-attachments/assets/ce05a34d-2ee1-4905-b269-e7cbc3740e5c" />
+</p>
+
+**Watch the full demo (2 min):**
+
+https://github.com/user-attachments/assets/8cb6ca57-1202-48b7-bc6d-a20908784d5a
+
 ## Positron
 
 In Positron the extension adds:

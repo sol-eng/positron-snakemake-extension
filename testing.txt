@@ -3,7 +3,7 @@ installed into the session's Snakemake environment on shared storage.
 
 1. Snakemake: Show Run Diagnostics
    - Snakemake found, logger and executor plugins installed, Workbench session: yes,
-     launcher whoami answers via "session".
+     the Workbench API answers via "session".
 2. Run Pipeline on posit-sdk-snakemake/examples, "As Workbench jobs", cluster and resource profile
    - Jobs appear in the Workbench Jobs pane, named snakejob.<rule>.<id>.sh, tagged
      snakemake-run:<run name>, snakemake-rule:<rule>.

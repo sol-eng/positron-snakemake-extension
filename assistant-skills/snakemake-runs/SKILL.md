@@ -15,6 +15,7 @@ Run each command with the `positronCommand` tool. Every command returns JSON.
 | `snakemake.positron.assistant.listRuns` | none | The runs started from Positron in this workspace, most recent first: `runName`, `status`, `snakefile`, `targets`, `dryRun`, times, and job `totals`. Read-only. |
 | `snakemake.positron.assistant.runStatus` | `[runName]` (optional; defaults to the most recent run) | One run in detail; see below. Read-only. |
 | `snakemake.positron.assistant.launchPipeline` | `[{ "snakefile": "...", "targets": [...], "profile": "...", "config": { "key": "value" }, "dryRun": true, "rerunIncomplete": true }]`, where only `snakefile` is required | Starts a run, which then appears in Pipeline Runs. Returns its `runName`. |
+| `snakemake.positron.assistant.jobOutput` | `[workbenchJobId, stderr]` (`stderr` optional, `true` for stderr) | The end of a Workbench job's own stdout or stderr, e.g. why its container failed to start. Read-only. |
 | `snakemake.positron.assistant.stopRun` | `[runName]` (optional; defaults to the most recent run) | Stops a running run: Snakemake cancels its jobs, including Workbench jobs. |
 
 Starting and stopping runs changes the user's work, so the user is asked to approve them. Only start or stop a run when the user asked for it. A dry run (`"dryRun": true`) is harmless; offer it when the user wants to know what would run.
@@ -33,7 +34,7 @@ To start a run, use `launchPipeline`, never `snakemake` in a shell. A run starte
    - `rules`: per-rule counts (`total`, `succeeded`, `running`, `queued`, `failed`, `retried`); `totals` for the whole run.
 3. Explain the cause in terms of the rule and its inputs. Quote the relevant log lines, and suggest a fix in the Snakefile, the config, or the environment.
 
-If a log tail is not enough, read the whole file at the path in `logs[].file`. For a job that ran as a Workbench job, its own stdout and stderr (e.g. a container that failed to start) come from `posit-workbench-smk-launcher output <workbenchJobId>` (add `--stderr` for stderr), run in a shell. Each run's files are in `.snakemake/positron/<runName>/` under the workflow's working directory: `output.log` (Snakemake's output), `events.ndjson` (the events the status comes from), and `run.json`.
+If a log tail is not enough, read the whole file at the path in `logs[].file`. For a job that ran as a Workbench job, its own stdout and stderr (e.g. a container that failed to start) come from `jobOutput` with the job's `workbenchJobId`. Each run's files are in `.snakemake/positron/<runName>/` under the workflow's working directory: `output.log` (Snakemake's output), `events.ndjson` (the events the status comes from), and `run.json`.
 
 ## Status questions
 

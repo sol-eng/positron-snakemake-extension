@@ -26,6 +26,24 @@ async function waitFor(runName, done, timeoutMs) {
 
 const node = (run) => ({ kind: "run", run: { files: { dir: run.dir } } });
 
+/** Call the stand-in Workbench API directly, e.g. its debug_calls. */
+function callFake(method) {
+  const http = require("http");
+  const body = JSON.stringify({ method, kwparams: {} });
+  return new Promise((resolve, reject) => {
+    const req = http.request(`${process.env.WORKBENCH_SERVER}/api/${method}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body), Authorization: `Bearer ${process.env.WORKBENCH_API_KEY}` }
+    }, (res) => {
+      let text = "";
+      res.on("data", (c) => (text += c));
+      res.on("end", () => resolve(JSON.parse(text).result));
+    });
+    req.on("error", reject);
+    req.end(body);
+  });
+}
+
 exports.run = async function () {
   const workflow = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath);
   const snakefile = path.join(workflow, "Snakefile");
@@ -103,7 +121,8 @@ exports.run = async function () {
     check("skill root registered", root && fs.existsSync(path.join(root, "snakemake-runs", "SKILL.md")), roots);
     const allowed = await ai.getAgentAllowedCommands();
     const ours = Object.fromEntries(allowed.filter((c) => c.id.startsWith("snakemake.positron.assistant.")).map((c) => [c.id.split(".").pop(), c]));
-    check("agent commands listed", ["listRuns", "runStatus", "launchPipeline", "stopRun"].every((n) => ours[n]), Object.keys(ours));
+    check("agent commands listed", ["listRuns", "runStatus", "launchPipeline", "stopRun", "jobOutput"].every((n) => ours[n]), Object.keys(ours));
+    check("jobOutput is read-only", ours.jobOutput?.readOnly === true);
     check("read-only flags", ours.listRuns?.readOnly === true && ours.runStatus?.readOnly === true && !ours.launchPipeline?.readOnly && !ours.stopRun?.readOnly);
     const launched = await ai.validateAndExecuteCommand("snakemake.positron.assistant.launchPipeline", [{ snakefile: "Snakefile", targets: ["broken"] }]);
     const brokenRun = launched.ok && JSON.parse(launched.result);
@@ -117,8 +136,34 @@ exports.run = async function () {
     check("result fits the assistant", status.result.length < 32000, status.result.length);
     const listed = await ai.validateAndExecuteCommand("snakemake.positron.assistant.listRuns", []);
     check("assistant lists runs", listed.ok && JSON.parse(listed.result).some((r) => r.runName === brokenRun.runName));
+
+    // jobs as Workbench jobs, against test-e2e/fake_workbench.py: the executor
+    // plugin submits them; a killed run's jobs are cancelled by the run's tag
+    const wb = await vscode.commands.executeCommand("snakemake.positron.runs.launchConfig", {
+      snakefile, executor: "workbench", workbench: { cluster: "Local" }, jobs: 2,
+      targets: ["out/c.txt", "out/d.txt"]
+    });
+    const wbDone = await waitFor(wb.runName, (r) => !["queued", "starting", "running"].includes(r.status), 120000);
+    check("a run with Workbench jobs succeeds", wbDone.status === "succeeded", { status: wbDone.status, error: wbDone.errorMessage });
+    const wbJob = wbDone.jobs.find((j) => j.rule === "make" && j.externalJobId);
+    const out = await acquirePositronApi().ai.validateAndExecuteCommand("snakemake.positron.assistant.jobOutput", [wbJob.externalJobId]);
+    const outResult = out.ok && JSON.parse(out.result);
+    check("the assistant reads a Workbench job's output", outResult && typeof outResult.output === "string" && !outResult.error, outResult);
+    check("its jobs have Workbench job ids", wbDone.jobs.filter((j) => j.rule === "make").every((j) => j.externalJobId), wbDone.jobs.map((j) => j.externalJobId));
+    const wbSlow = await vscode.commands.executeCommand("snakemake.positron.runs.launchConfig", {
+      snakefile, executor: "workbench", workbench: { cluster: "Local" }, jobs: 2, targets: ["slow"]
+    });
+    await waitFor(wbSlow.runName, (r) => r.jobs.some((j) => j.externalJobId), 60000);
+    await vscode.commands.executeCommand("snakemake.positron.runs.kill", node(await runOf(wbSlow.runName)));
+    const killed = await waitFor(wbSlow.runName, (r) => !["queued", "starting", "running"].includes(r.status), 30000);
+    let stopCalls = [];
+    for (let i = 0; i < 40 && !stopCalls.length; i++) {
+      await sleep(500);
+      stopCalls = (await callFake("debug_calls")).filter((c) => c.method === "stop_job");
+    }
+    check("a killed run's Workbench jobs are cancelled", killed.status === "stopped" && stopCalls.length >= 1, { status: killed.status, stopCalls });
   } catch (e) {
-    check("no exception", false, String(e && e.stack || e));
+    check("no exception", false, String((e && e.stack) || e));
   }
   fs.writeFileSync(process.env.E2E_RESULT, JSON.stringify(results, null, 2));
 };

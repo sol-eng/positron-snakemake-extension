@@ -281,23 +281,7 @@ export function buildRunScript(script: RunScript): string {
   return lines.join("\n") + "\n";
 }
 
-export type JobState = "queued" | "running" | "ended" | "missing";
-
-/**
- * The state of `jobId` in `posit-workbench-smk-launcher status` output, one
- * `<id> <STATE>` line per job. A job that is not listed is `missing`: it may
- * not be visible yet right after it was submitted.
- */
-export function parseJobStatus(output: string, jobId: string): JobState {
-  for (const line of output.split("\n")) {
-    const [id, state] = line.trim().split(/\s+/);
-    if (id !== jobId) continue;
-    if (state === "PENDING" || state === "HOLD") return "queued";
-    if (state === "RUNNING") return "running";
-    return "ended";
-  }
-  return "missing";
-}
+export type { JobState } from "./workbenchApi";
 
 export type DriverMode = "local" | "job";
 

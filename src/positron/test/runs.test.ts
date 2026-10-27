@@ -14,7 +14,6 @@ import {
   launchDirOf,
   makeRunName,
   parseConfig,
-  parseJobStatus,
   profileExecutor,
   resolveDriverMode,
   runFiles,
@@ -242,12 +241,7 @@ test("versions, plugins and profiles", () => {
   assert.equal(profileExecutor("jobs: 10\n"), undefined);
 });
 
-test("job status and driver mode", () => {
-  const out = "j1 RUNNING\nj2 PENDING\nj3 DONE\n";
-  assert.equal(parseJobStatus(out, "j1"), "running");
-  assert.equal(parseJobStatus(out, "j2"), "queued");
-  assert.equal(parseJobStatus(out, "j3"), "ended");
-  assert.equal(parseJobStatus(out, "j4"), "missing");
+test("driver mode", () => {
   assert.deepEqual(resolveDriverMode("auto", true), { mode: "job", ask: true });
   assert.deepEqual(resolveDriverMode("job", true), { mode: "job", ask: false });
   assert.deepEqual(resolveDriverMode("job", false), { mode: "local", ask: false });

@@ -22,6 +22,8 @@ import {
   type RunStore
 } from "./runs";
 import { readTail, stripAnnotation } from "./runs/dashboard/jobFiles";
+import { jobOutput } from "./runs/driverJob";
+import { runEnvironment } from "./runs/env";
 import { registerCommand } from "./runs/log";
 import { isTerminal } from "./runs/model";
 import { isActive } from "./runs/store";
@@ -190,11 +192,37 @@ function registerAssistantCommands(store: RunStore): vscode.Disposable[] {
         json(await launchResult(store, input as LaunchToolInput, follow))
     ),
     registerCommand(
+      "snakemake.positron.assistant.jobOutput",
+      async (workbenchJobId?: unknown, stderr?: unknown) =>
+        json(await jobOutputResult(workbenchJobId, stderr === true))
+    ),
+    registerCommand(
       "snakemake.positron.assistant.stopRun",
       async (runName?: unknown) =>
         json(await stopResult(store, stringArg(runName)))
     )
   ];
+}
+
+/** The end of a Workbench job's own stdout or stderr. */
+export async function jobOutputResult(workbenchJobId: unknown, stderr: boolean) {
+  const id =
+    typeof workbenchJobId === "string"
+      ? workbenchJobId
+      : (workbenchJobId as { workbenchJobId?: string } | undefined)?.workbenchJobId;
+  if (!id) return { error: "Give the job's workbenchJobId, from runStatus." };
+  try {
+    const text = await jobOutput(await runEnvironment(), id, stderr);
+    const lines = text.trimEnd().split("\n");
+    return {
+      workbenchJobId: id,
+      stream: stderr ? "stderr" : "stdout",
+      output: clip(lines.slice(-200).join("\n")) ?? "",
+      linesNotShown: Math.max(0, lines.length - 200)
+    };
+  } catch (e) {
+    return { error: `Could not get the job's output: ${e instanceof Error ? e.message : e}` };
+  }
 }
 
 /** A run name, also from `{ runName }` as an agent may pass it. */

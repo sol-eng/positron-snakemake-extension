@@ -29,7 +29,6 @@ export type RunEnvironment = {
   loggerPlugin: boolean;
   /** the workbench executor plugin is installed: jobs as Workbench jobs */
   executorPlugin: boolean;
-  launcherCli: string;
   /** set inside a Posit Workbench session */
   inWorkbench: boolean;
   problems: string[];
@@ -109,7 +108,6 @@ async function resolve(): Promise<RunEnvironment> {
     env,
     loggerPlugin: plugins.logger,
     executorPlugin: plugins.executor,
-    launcherCli: findLauncher(env),
     inWorkbench: !!(env.RS_SERVER_URL || env.POSIT_PRODUCT),
     problems
   };
@@ -158,16 +156,6 @@ async function preferredPython(): Promise<string | undefined> {
   } catch {
     return undefined;
   }
-}
-
-/**
- * The launcher CLI from the setting, found on the PATH or else next to
- * `snakemake`, where installing posit-sdk-snakemake puts it.
- */
-function findLauncher(env: NodeJS.ProcessEnv): string {
-  const setting = runSetting("launcherCli", "posit-workbench-smk-launcher");
-  if (path.isAbsolute(setting)) return setting;
-  return findOnPath(setting, env.PATH) ?? setting;
 }
 
 function isExecutable(file: string): boolean {

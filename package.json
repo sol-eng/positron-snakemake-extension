@@ -334,6 +334,34 @@
                 }
             },
             {
+                "command": "snakemake.positron.assistant.jobOutput",
+                "title": "Show Workbench Job Output (for the Assistant)",
+                "category": "Snakemake",
+                "agent": {
+                    "description": "The end (last 200 lines) of a Posit Workbench job's own stdout or stderr, for a job of a Snakemake run that ran as a Workbench job, e.g. to see why its container failed to start.",
+                    "args": [
+                        {
+                            "name": "workbenchJobId",
+                            "description": "The job's Workbench job id, from runStatus (failedJobs[].workbenchJobId).",
+                            "required": true,
+                            "schema": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "name": "stderr",
+                            "description": "true for stderr; stdout otherwise.",
+                            "required": false,
+                            "schema": {
+                                "type": "boolean"
+                            }
+                        }
+                    ],
+                    "returns": "JSON object with the job's output, or an error.",
+                    "readOnly": true
+                }
+            },
+            {
                 "command": "snakemake.positron.assistant.stopRun",
                 "title": "Stop Pipeline Run (for the Assistant)",
                 "category": "Snakemake",
@@ -525,6 +553,10 @@
                 },
                 {
                     "command": "snakemake.positron.assistant.stopRun",
+                    "when": "false"
+                },
+                {
+                    "command": "snakemake.positron.assistant.jobOutput",
                     "when": "false"
                 }
             ],
@@ -899,7 +931,8 @@
                 "snakemake.run.launcherCli": {
                     "type": "string",
                     "default": "posit-workbench-smk-launcher",
-                    "markdownDescription": "The Posit Workbench launcher CLI, used to list clusters, submit headless runs, and cancel Workbench jobs. Found next to `snakemake` if it is not on the `PATH`."
+                    "markdownDescription": "No longer used: the extension calls the Workbench API itself.",
+                    "markdownDeprecationMessage": "No longer used: the extension calls the Workbench API itself."
                 },
                 "snakemake.run.confirm": {
                     "type": "boolean",

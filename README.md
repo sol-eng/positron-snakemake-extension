@@ -34,7 +34,8 @@ In VS Code the extension behaves like upstream.
 ### Requirements
 
 - Snakemake 9 or later. The extension uses the `snakemake` of the Python interpreter selected in Positron, a `.venv` in the workspace, or the one on the `PATH`; set `snakemake.run.executable` to choose another.
-- For live job status, Workbench jobs and headless runs: [posit-sdk-snakemake](https://github.com/sol-eng/posit-sdk-snakemake), installed into the same environment as Snakemake (`uv pip install <path-to-posit-sdk-snakemake>`). It provides the workbench logger plugin (live events), the workbench executor plugin (`--executor workbench`), and the `posit-workbench-smk-launcher` CLI. Without it, runs work locally and job status is read from Snakemake's output.
+- For live job status and Workbench jobs: [posit-sdk-snakemake](https://github.com/sol-eng/posit-sdk-snakemake) 0.3.0 or later, installed into the same environment as Snakemake (`pip install git+https://github.com/sol-eng/posit-sdk-snakemake`). It provides the workbench logger plugin (live events) and the workbench executor plugin (`--executor workbench`), and needs nothing beyond Snakemake. Without it, runs work locally and job status is read from Snakemake's output.
+- On Posit Workbench, the extension talks to the Workbench API itself, with the session's credentials, to list clusters and to submit, follow and stop Snakemake's own job (headless runs) and the jobs a run leaves behind. Outside Workbench it uses `WORKBENCH_SERVER` and `WORKBENCH_API_KEY` if they are set. A server certificate from a private CA is read from `REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE` or `NODE_EXTRA_CA_CERTS`.
 - **Snakemake: Show Run Diagnostics** shows what the extension found.
 
 The extension ID is `posit.positron-snakemake`. It contributes the same language, grammars and snippets as `snakemake.snakemake-lang`, so it stays inactive, and offers to uninstall that extension, while both are installed.

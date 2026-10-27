@@ -21,6 +21,14 @@ cat >"$tmp/user/User/settings.json" <<JSON
 }
 JSON
 export E2E_RESULT="$tmp/result.json"
+# a stand-in for the Workbench API, for the runs whose jobs are Workbench jobs
+python3 "$here/fake_workbench.py" >"$tmp/fake-url" &
+fake_pid=$!
+disown "$fake_pid"
+trap 'kill "$fake_pid" 2>/dev/null; rm -rf "$tmp"' EXIT
+for _ in $(seq 50); do [ -s "$tmp/fake-url" ] && break; sleep 0.1; done
+export WORKBENCH_SERVER="$(cat "$tmp/fake-url")" WORKBENCH_API_KEY=fake-key
+unset POSIT_PRODUCT RS_SERVER_ADDRESS RS_SERVER_URL PWB_SESSION_RUNTIME_DIR RS_SESSION_RPC_COOKIE
 # built-in extensions may write logs into the current directory
 cd "$tmp"
 "$editor" --user-data-dir "$tmp/user" --extensions-dir "$tmp/extensions" \

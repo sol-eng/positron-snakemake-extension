@@ -7,13 +7,8 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
-import type { DriverJobOptions } from "./driverJob";
-import {
-  execFile,
-  runSetting,
-  snakemake,
-  type RunEnvironment
-} from "./env";
+import { workbenchApi, type DriverJobOptions } from "./driverJob";
+import { runSetting, snakemake, type RunEnvironment } from "./env";
 import {
   defaultCwd,
   formatConfig,
@@ -22,6 +17,7 @@ import {
   resolveDriverMode,
   type LaunchConfig
 } from "./launchArgs";
+import type { Cluster } from "./workbenchApi";
 
 export type LaunchPlan = {
   config: LaunchConfig;
@@ -29,11 +25,6 @@ export type LaunchPlan = {
   driver?: DriverJobOptions;
 };
 
-type Cluster = {
-  name: string;
-  supportsContainers?: boolean;
-  resourceProfiles: string[];
-};
 
 const lastConfigKey = (snakefile: string) =>
   `snakemake.positron.launch:${snakefile}`;
@@ -466,28 +457,27 @@ async function pickWorkbench(
   return { cluster: name, resourceProfile: profile.value };
 }
 
-let launcherWorks: Promise<boolean> | undefined;
+let workbenchWorks: Promise<boolean> | undefined;
 
 /**
  * Snakemake can run as a Workbench job from a Workbench session whose
- * launcher CLI answers. The job then runs with Workbench credentials of its
- * own.
+ * credentials the Workbench API accepts. The job then runs with Workbench
+ * credentials of its own.
  */
 export function driverJobAvailable(
   environment: RunEnvironment
 ): Promise<boolean> {
   if (!environment.inWorkbench) return Promise.resolve(false);
-  launcherWorks ??= execFile(environment.launcherCli, ["whoami", "--json"], {
-    env: environment.env,
-    timeout: 30000
-  }).then(
-    () => true,
-    () => {
-      launcherWorks = undefined;
-      return false;
-    }
-  );
-  return launcherWorks;
+  workbenchWorks ??= Promise.resolve()
+    .then(() => workbenchApi(environment).whoami())
+    .then(
+      () => true,
+      () => {
+        workbenchWorks = undefined;
+        return false;
+      }
+    );
+  return workbenchWorks;
 }
 
 /** The options of Snakemake's own job from the settings, given its cluster. */
@@ -570,15 +560,10 @@ export async function listClusters(
   environment: RunEnvironment
 ): Promise<Cluster[] | undefined> {
   try {
-    const output = await execFile(
-      environment.launcherCli,
-      ["clusters", "--json"],
-      { env: environment.env, timeout: 30000 }
-    );
-    return JSON.parse(output);
+    return await workbenchApi(environment).clusters();
   } catch (e) {
     vscode.window.showWarningMessage(
-      `Could not list Workbench clusters with \`${environment.launcherCli}\`. ${e}`
+      `Could not list Workbench clusters: ${e instanceof Error ? e.message : e}`
     );
     return undefined;
   }

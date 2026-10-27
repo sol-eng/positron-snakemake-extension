@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The extension talks to the Workbench API itself (`workbenchApi.ts`, Node's http/https), instead of running `posit-workbench-smk-launcher`: to list clusters, check credentials, submit, follow and stop Snakemake's own job, cancel the jobs a run leaves behind, and read a job's output. `snakemake.run.launcherCli` is no longer used.
+- Posit Assistant can read a Workbench job's own output (`snakemake.positron.assistant.jobOutput`).
+- Needs posit-sdk-snakemake 0.3.0 or later, which no longer depends on a fork of posit-sdk.
+
 - A job's HTML outputs (e.g. a MultiQC report) open in the Viewer with a button back to the job's dashboard, like Snakemake's report does, and without Positron's default webview styles. Both now use one shared Viewer panel (`htmlViewer.ts`), as in the Nextflow extension.
 
 ## 0.1.0 (2026-10-27)

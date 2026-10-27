@@ -2,6 +2,7 @@
 // view.
 
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import type { PositronApi } from "@posit-dev/positron";
@@ -11,7 +12,8 @@ import {
   cancelJobs,
   cancelRunJobs,
   stopDriverJob,
-  submitDriverJob
+  submitDriverJob,
+  workbenchApi
 } from "./driverJob";
 import {
   execFile,
@@ -775,18 +777,15 @@ async function showDiagnostics() {
     `PATH: ${environment.env.PATH}`
   ];
   try {
-    const whoami = await execFile(environment.launcherCli, ["whoami"], {
-      env: environment.env,
-      timeout: 30000
-    });
-    lines.push(`Launcher (${environment.launcherCli}): ${whoami.trim()}`);
+    const { auth, server } = await workbenchApi(environment).whoami();
+    lines.push(`Workbench API: ${os.userInfo().username} via ${auth} on ${server}`);
   } catch (e) {
-    lines.push(`Launcher (${environment.launcherCli}): unavailable (${e})`);
+    lines.push(`Workbench API: unavailable (${e instanceof Error ? e.message : e})`);
   }
   if (!environment.loggerPlugin || !environment.executorPlugin) {
     lines.push(
       "",
-      "The workbench plugins and the launcher come with posit-sdk-snakemake: install it into the same environment as Snakemake (uv pip install <path-to-posit-sdk-snakemake>)."
+      "The workbench plugins come with posit-sdk-snakemake: install it into the same environment as Snakemake (pip install git+https://github.com/sol-eng/posit-sdk-snakemake)."
     );
   }
   if (environment.problems.length)

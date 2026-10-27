@@ -1,15 +1,21 @@
-// Runs Snakemake itself as a Posit Workbench Job through the launcher CLI,
+// Runs Snakemake itself as a Posit Workbench Job through the Workbench API,
 // so a run outlives the session that started it. The job gets credentials of
 // its own from Workbench, which Snakemake uses for every job it submits, so
 // none are passed to it.
 
 import * as os from "os";
 
-import { execFile, type RunEnvironment } from "./env";
-import { parseJobStatus, runTag, type JobState, type RunFiles } from "./launchArgs";
+import type { RunEnvironment } from "./env";
+import { runTag, type JobState, type RunFiles } from "./launchArgs";
 import { writeRecord, writeRunScript, type RunRecord } from "./runner";
+import { isUnfinished, WorkbenchApi } from "./workbenchApi";
 
 export type DriverJobOptions = NonNullable<RunRecord["driver"]>;
+
+/** The Workbench API with the credentials runs are started with. */
+export function workbenchApi(environment: RunEnvironment): WorkbenchApi {
+  return new WorkbenchApi(environment.env);
+}
 
 export async function submitDriverJob(
   environment: RunEnvironment,
@@ -22,30 +28,19 @@ export async function submitDriverJob(
     user: os.userInfo().username,
     path: environment.env.PATH ?? ""
   });
-  const args = [
-    "submit",
-    "--cluster",
-    options.cluster,
-    "--name",
-    `smk-driver-${record.runName}`,
-    "--cpus",
-    String(options.cpus),
-    "--mem-mb",
-    String(options.memoryMb),
-    "--tag",
-    "snakemake-driver",
-    "--tag",
-    runTag(record.runName)
-  ];
-  if (options.image) args.push("--container", options.image);
-  args.push(files.script);
-  const output = await execFile(environment.launcherCli, args, {
-    cwd: files.dir,
-    env: environment.env,
-    timeout: 60000
+  const jobId = await workbenchApi(environment).launchJob({
+    cluster: options.cluster,
+    name: `smk-driver-${record.runName}`,
+    exe: "/bin/bash",
+    args: [files.script],
+    workingDirectory: files.dir,
+    tags: ["snakemake-driver", runTag(record.runName)],
+    container: options.image ? { image: options.image } : undefined,
+    resourceLimits: [
+      { type: "cpuCount", value: String(options.cpus) },
+      { type: "memory", value: String(options.memoryMb) }
+    ]
   });
-  const jobId = output.trim();
-  if (!jobId) throw new Error("the launcher did not return a job id");
   record.jobId = jobId;
   record.mode = "job";
   record.driver = options;
@@ -57,14 +52,9 @@ export async function driverJobState(
   jobId: string
 ): Promise<JobState | undefined> {
   try {
-    const output = await execFile(
-      environment.launcherCli,
-      ["status", jobId],
-      { env: environment.env, timeout: 60000 }
-    );
-    return parseJobStatus(output, jobId);
+    return await workbenchApi(environment).jobState(jobId);
   } catch {
-    // the launcher is unreachable: keep the last known state
+    // Workbench is unreachable: keep the last known state
     return undefined;
   }
 }
@@ -78,44 +68,32 @@ export async function stopDriverJob(
   jobId: string,
   graceful: boolean
 ): Promise<void> {
-  await execFile(
-    environment.launcherCli,
-    ["kill", ...(graceful ? ["--graceful"] : []), jobId],
-    { env: environment.env, timeout: 60000 }
-  );
+  await workbenchApi(environment).stopJob(jobId, graceful);
 }
 
-/** Stop the unfinished Workbench jobs of a run, by its tag. */
+/** Stop the unfinished Workbench jobs of a run, by its tag. Returns their ids. */
 export async function cancelRunJobs(
   environment: RunEnvironment,
   runName: string
 ): Promise<string[]> {
-  const output = await execFile(
-    environment.launcherCli,
-    ["kill", "--tag", runTag(runName)],
-    { env: environment.env, timeout: 60000 }
-  );
-  return output.split("\n").filter((l) => l.trim());
+  const api = workbenchApi(environment);
+  const tag = runTag(runName);
+  const ids = [...(await api.statusMap()).values()]
+    .filter((job) => (job.tags ?? []).includes(tag) && isUnfinished(job))
+    .map((job) => job.id);
+  return api.stopJobs(ids);
 }
 
 export async function cancelJobs(environment: RunEnvironment, ids: string[]) {
   if (!ids.length) return;
-  await execFile(environment.launcherCli, ["kill", ...ids], {
-    env: environment.env,
-    timeout: 60000
-  });
+  await workbenchApi(environment).stopJobs(ids);
 }
 
-/** A Workbench job's stdout or stderr, through the launcher. */
+/** A Workbench job's stdout or stderr. */
 export function jobOutput(
   environment: RunEnvironment,
   jobId: string,
   stderr: boolean
 ): Promise<string> {
-  return execFile(
-    environment.launcherCli,
-    ["output", jobId, ...(stderr ? ["--stderr"] : [])],
-    { env: environment.env, timeout: 60000 }
-  );
+  return workbenchApi(environment).jobOutput(jobId, stderr);
 }
-

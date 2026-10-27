@@ -1,23 +1,17 @@
 # Change Log
 
-## Unreleased
+## 0.1.0 (2026-10-27)
 
-- Posit Assistant (Positron 2026.07 and later) can now use the extension: a bundled `snakemake-runs` skill, registered with `positron.ai.registerAgentSkillRoot`, and agent-compatible `snakemake.positron.assistant.*` commands. Posit Assistant does not use VS Code language model tools, which remain for other assistants.
-- The rule and job graphs open in the dashboard, with a way back to the run and a switch between them, instead of replacing it in the Viewer.
-- Snakemake's report opens in a Viewer panel with a "← run" button back to the run's dashboard, and without Positron's default webview styles, which shifted its content under its menu and recoloured the menu.
-- "In this session" passes `--executor local`, so a workflow profile's executor no longer overrides it; Run Pipeline offers "As the profile says" when a profile sets one.
-- The run wrapper records Snakemake's exit code correctly when a stop arrives.
+First release of the Positron fork, based on upstream 0.8.2 ([82bc85d](https://github.com/snakemake/snakemake-lang-vscode-plugin/commit/82bc85d)). In VS Code it behaves like upstream.
 
-## 0.1.0 (Positron fork)
-
-First release of the Positron fork, based on upstream 0.8.2 ([82bc85d](https://github.com/snakemake/snakemake-lang-vscode-plugin/commit/82bc85d)).
-
-- Pipeline Runs view: run, dry-run, stop, finish, force kill, run again and rerun incomplete; live status per rule and job from the workbench logger plugin, or from Snakemake's output without it.
-- Jobs as Posit Workbench jobs (workbench executor plugin), and Snakemake itself as a Workbench Job (headless runs).
-- Job and run dashboards, rule and job graphs, report and output summary in the Viewer and Data Explorer.
-- Debug a `script:` job in the console with its `snakemake` object.
-- Positron Assistant tools to list, inspect, launch and stop runs.
+- Pipeline Runs view: run, dry-run, stop, stop after running jobs finish, force kill, run again, rerun incomplete, and unlock. Live status per rule and job comes from the workbench logger plugin, or from Snakemake's output without it. Runs keep going across window reloads.
+- Jobs as Posit Workbench jobs (workbench executor plugin), on a chosen cluster and resource profile, and Snakemake itself as a Workbench Job (headless runs). Workbench jobs a run leaves behind are cancelled by the run's tag. Run Pipeline respects a profile's, or the workflow profile's, executor, and offers "As the profile says".
+- Run and job dashboards in the Viewer: per-rule progress, job logs, benchmarks, outputs, and a Workbench job's own output. The rule graph (live, coloured by progress) and the job graph are views of the dashboard. Snakemake's report opens in the Viewer with a button back to the run, and the output summary opens in the Data Explorer.
+- Debug a `script:` job in the console, with its `snakemake` object defined.
+- Posit Assistant can list, explain, launch and stop runs, through a bundled `snakemake-runs` skill and agent-compatible `snakemake.positron.assistant.*` commands. Assistants that use VS Code language model tools get the same as `snakemake_*` tools.
 - Run lines, selections and `run:` blocks in the Python console.
+
+Requires Positron (Posit Assistant support needs 2026.07 or later) and Snakemake 9 or later. Live status, Workbench jobs and headless runs need [posit-sdk-snakemake](https://github.com/sol-eng/posit-sdk-snakemake) 0.2.0 or later, installed into the same environment as Snakemake.
 
 ## [0.8.2](https://github.com/snakemake/snakemake-lang-vscode-plugin/compare/v0.8.1...v0.8.2) (2026-05-21)
 

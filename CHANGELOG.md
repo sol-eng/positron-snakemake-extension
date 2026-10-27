@@ -4,7 +4,7 @@
 
 - Posit Assistant (Positron 2026.07 and later) can now use the extension: a bundled `snakemake-runs` skill, registered with `positron.ai.registerAgentSkillRoot`, and agent-compatible `snakemake.positron.assistant.*` commands. Posit Assistant does not use VS Code language model tools, which remain for other assistants.
 - The rule and job graphs open in the dashboard, with a way back to the run and a switch between them, instead of replacing it in the Viewer.
-- Snakemake's report opens in a Viewer panel with a "← run" button back to the run's dashboard.
+- Snakemake's report opens in a Viewer panel with a "← run" button back to the run's dashboard, and without Positron's default webview styles, which shifted its content under its menu and recoloured the menu.
 - "In this session" passes `--executor local`, so a workflow profile's executor no longer overrides it; Run Pipeline offers "As the profile says" when a profile sets one.
 - The run wrapper records Snakemake's exit code correctly when a stop arrives.
 

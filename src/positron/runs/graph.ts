@@ -64,11 +64,33 @@ export function tsvOnly(stdout: string): string {
 }
 
 /**
+ * Undoes the default styles Positron puts into every webview (a
+ * `vscode-default` cascade layer: body padding, theme colours and fonts,
+ * link and `code` colours, image sizes), which the report is not written
+ * for: the padding alone pushes its content under its fixed menu. `revert`
+ * goes back to the browser's own styles. It comes first in the head, so the
+ * report's own rules, which come later, still win.
+ */
+const REVERT_WEBVIEW_DEFAULTS = `<style id="snakemake-positron-reset">
+html { scrollbar-color: revert; }
+body { overscroll-behavior-x: revert; background-color: revert; color: revert; font-family: revert; font-weight: revert; font-size: revert; margin: revert; padding: revert; }
+img, video { max-width: revert; max-height: revert; }
+a, a code, a:hover { color: revert; }
+p > a { text-decoration: revert; }
+a:focus, input:focus, select:focus, textarea:focus { outline: revert; outline-offset: revert; }
+code { font-family: revert; color: revert; background-color: revert; padding: revert; border-radius: revert; }
+pre code { padding: revert; }
+blockquote { background: revert; border-color: revert; }
+kbd { background-color: revert; color: revert; border: revert; border-radius: revert; box-shadow: revert; vertical-align: revert; padding: revert; }
+</style>`;
+
+/**
  * Snakemake's report with a "← <run>" button added, for showing it in a
  * Viewer panel that can take the user back to the run's dashboard. The
  * report is self-contained and sets no Content Security Policy, so the
- * button's script runs like the report's own. It goes before the last
- * `</body>`: the report's scripts may contain the tag in strings.
+ * button's script runs like the report's own. The button goes before the
+ * last `</body>`, and the style reset after the first `<head>`: the
+ * report's scripts contain both tags in strings, after the real ones.
  */
 export function reportWithBackButton(report: string, runName: string): string {
   const label = `\u2190 ${runName}`.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -83,5 +105,10 @@ export function reportWithBackButton(report: string, runName: string): string {
 </script>
 `;
   const at = report.lastIndexOf("</body>");
-  return at === -1 ? report + button : report.slice(0, at) + button + report.slice(at);
+  const withButton =
+    at === -1 ? report + button : report.slice(0, at) + button + report.slice(at);
+  const head = withButton.search(/<head[^>]*>/i);
+  if (head === -1) return REVERT_WEBVIEW_DEFAULTS + withButton;
+  const after = withButton.indexOf(">", head) + 1;
+  return withButton.slice(0, after) + REVERT_WEBVIEW_DEFAULTS + withButton.slice(after);
 }

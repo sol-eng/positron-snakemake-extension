@@ -111,11 +111,15 @@ test("graph and summary output after other stdout", () => {
 });
 
 test("the report gets a button back to its run", () => {
-  const report = '<html><body><script>const s = "</body>";</script><main>report</main></body></html>';
+  const report = '<html><head><title>r</title></head><body><script>const s = "<head></body>";</script><main>report</main></body></html>';
   const html = reportWithBackButton(report, 'flow <"run">');
   // inserted before the last </body>, not the one in the script's string
   assert.ok(html.indexOf("snakemake-positron-back") > html.indexOf("<main>report</main>"));
   assert.ok(html.endsWith("</body></html>"));
   assert.match(html, /postMessage\(\{ type: "back" \}\)/);
   assert.ok(html.includes("flow &#60;&#34;run&#34;&#62;") && !html.includes('flow <"run">'));
+  // Positron's webview defaults are undone first thing in the real head
+  assert.ok(html.startsWith('<html><head><style id="snakemake-positron-reset">'));
+  assert.match(html, /body \{[^}]*padding: revert;/);
+  assert.equal(html.split("snakemake-positron-reset").length, 2);
 });

@@ -15,7 +15,7 @@ import {
   stripAnnotation
 } from "../runs/dashboard/jobFiles";
 import { applyEvent } from "../runs/events";
-import { mermaidOnly, ruleGraphMermaid, tsvOnly } from "../runs/graph";
+import { mermaidOnly, reportWithBackButton, ruleGraphMermaid, tsvOnly } from "../runs/graph";
 import { emptyProgress, type JobState } from "../runs/model";
 
 const fixture = (name: string) =>
@@ -108,4 +108,14 @@ test("the dashboard page loads mermaid and keeps its data inert", () => {
 test("graph and summary output after other stdout", () => {
   assert.equal(mermaidOnly("hello from the Snakefile\n---\ntitle: DAG\n---\nflowchart TB\n"), "---\ntitle: DAG\n---\nflowchart TB\n");
   assert.equal(tsvOnly("noise\noutput_file\tdate\n"), "output_file\tdate\n");
+});
+
+test("the report gets a button back to its run", () => {
+  const report = '<html><body><script>const s = "</body>";</script><main>report</main></body></html>';
+  const html = reportWithBackButton(report, 'flow <"run">');
+  // inserted before the last </body>, not the one in the script's string
+  assert.ok(html.indexOf("snakemake-positron-back") > html.indexOf("<main>report</main>"));
+  assert.ok(html.endsWith("</body></html>"));
+  assert.match(html, /postMessage\(\{ type: "back" \}\)/);
+  assert.ok(html.includes("flow &#60;&#34;run&#34;&#62;") && !html.includes('flow <"run">'));
 });

@@ -62,3 +62,26 @@ export function tsvOnly(stdout: string): string {
   const start = stdout.search(/^output_file\t/m);
   return start > 0 ? stdout.slice(start) : stdout;
 }
+
+/**
+ * Snakemake's report with a "← <run>" button added, for showing it in a
+ * Viewer panel that can take the user back to the run's dashboard. The
+ * report is self-contained and sets no Content Security Policy, so the
+ * button's script runs like the report's own. It goes before the last
+ * `</body>`: the report's scripts may contain the tag in strings.
+ */
+export function reportWithBackButton(report: string, runName: string): string {
+  const label = `\u2190 ${runName}`.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  const button = `
+<button id="snakemake-positron-back" type="button" title="Back to the run's dashboard"
+  style="position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font:13px system-ui,sans-serif;color:#fff;background:#0e639c;box-shadow:0 1px 4px rgba(0,0,0,.3)">${label}</button>
+<script>
+  (function () {
+    const vscode = acquireVsCodeApi();
+    document.getElementById("snakemake-positron-back").addEventListener("click", () => vscode.postMessage({ type: "back" }));
+  })();
+</script>
+`;
+  const at = report.lastIndexOf("</body>");
+  return at === -1 ? report + button : report.slice(0, at) + button + report.slice(at);
+}

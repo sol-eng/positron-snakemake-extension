@@ -93,6 +93,8 @@ exports.run = async function () {
     await vscode.commands.executeCommand("snakemake.positron.runs.openRulegraph", node(done));
     await vscode.commands.executeCommand("snakemake.positron.runs.openDag", node(done));
     check("graphs opened", true);
+    await vscode.commands.executeCommand("snakemake.positron.runs.openReport", node(done));
+    check("report created and opened", fs.existsSync(path.join(done.dir, "report.html")));
 
     // Posit Assistant: the skill and the agent commands, the way it reaches them
     const ai = acquirePositronApi().ai;

@@ -29,8 +29,9 @@ jobs:
 
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-      # The README links to repository files relative to itself, and GitHub
-      # embeds bare user-attachments video links, which Jekyll does not.
+      # The README links to repository files relative to itself, and to
+      # user-attachments media that only GitHub's own pages can load; the site
+      # uses copies in misc/ instead.
       - name: Assemble site from the README
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
@@ -46,7 +47,8 @@ jobs:
             printf -- '---\nlayout: default\n---\n\n'
             sed -E \
               -e '1{/^# /d;}' \
-              -e 's#^(https://github\.com/user-attachments/assets/[^ ]+)$#<video src="\1" controls width="960" style="max-width:100%"></video>#' \
+              -e 's#src="https://github\.com/user-attachments/assets/ce05a34d-2ee1-4905-b269-e7cbc3740e5c"#src="misc/demo.gif"#' \
+              -e 's#^https://github\.com/user-attachments/assets/8cb6ca57-1202-48b7-bc6d-a20908784d5a$#<video src="misc/demo.mp4" controls width="960" style="max-width:100%"></video>#' \
               -e "s#\]\((src|reference|syntaxes|snippets)/#](${REPO_URL}/blob/main/\1/#g" \
               -e "s#\]\((CONTRIBUTING\.md|CHANGELOG\.md|LICENSE)\)#](${REPO_URL}/blob/main/\1)#g" \
               README.md

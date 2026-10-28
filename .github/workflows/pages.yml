@@ -1,0 +1,74 @@
+# GitHub Pages: the README as the project's site.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - misc/**
+      - media/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      # The README links to repository files relative to itself, and GitHub
+      # embeds bare user-attachments video links, which Jekyll does not.
+      - name: Assemble site from the README
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          mkdir site
+          cp -r misc media site/
+          cat > site/_config.yml <<EOF
+          title: Snakemake extension for Positron
+          description: Run and follow Snakemake pipelines in Positron, locally or as Posit Workbench jobs
+          theme: jekyll-theme-cayman
+          EOF
+          {
+            printf -- '---\nlayout: default\n---\n\n'
+            sed -E \
+              -e '1{/^# /d;}' \
+              -e 's#^(https://github\.com/user-attachments/assets/[^ ]+)$#<video src="\1" controls width="960" style="max-width:100%"></video>#' \
+              -e "s#\]\((src|reference|syntaxes|snippets)/#](${REPO_URL}/blob/main/\1/#g" \
+              -e "s#\]\((CONTRIBUTING\.md|CHANGELOG\.md|LICENSE)\)#](${REPO_URL}/blob/main/\1)#g" \
+              README.md
+          } > site/index.md
+
+      - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+        with:
+          source: site
+          destination: _site
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
